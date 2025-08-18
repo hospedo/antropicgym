@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { AuditLogger } from '@/lib/audit-logger'
 import { Search, User, Calendar, CreditCard, AlertTriangle, CheckCircle, XCircle, Clock, Plus, RefreshCw, UserCheck, Edit } from 'lucide-react'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface ConsultaResult {
   cliente: {
@@ -155,7 +156,7 @@ export default function ConsultasPage() {
           precio: plan.precio
         },
         metadatos: {
-          fecha_pago_personalizada: fechaInicioPlan !== new Date().toISOString().split('T')[0],
+          fecha_pago_personalizada: fechaInicioPlan !== getBuenosAiresDateString(),
           es_renovacion: esRenovacion,
           dias_restantes_anterior: result.dias_restantes
         }
@@ -256,8 +257,8 @@ export default function ConsultasPage() {
 
     setRegistrandoAsistencia(true)
     try {
-      const now = new Date()
-      const fecha = now.toISOString().split('T')[0]
+      const now = getBuenosAiresDate()
+      const fecha = getBuenosAiresDateString()
       const hora = now.toTimeString().split(' ')[0].substring(0, 5)
 
       // Verificar si ya tiene asistencia hoy
@@ -368,7 +369,7 @@ export default function ConsultasPage() {
 
       if (inscripcionActiva) {
         const fechaFin = new Date(inscripcionActiva.fecha_fin)
-        const hoy = new Date()
+        const hoy = getBuenosAiresDate()
         diasRestantes = Math.ceil((fechaFin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
 
         if (diasRestantes > 7) {
@@ -390,9 +391,9 @@ export default function ConsultasPage() {
         .limit(1)
 
       // Contar asistencias del mes actual
-      const inicioMes = new Date()
+      const inicioMes = getBuenosAiresDate()
       inicioMes.setDate(1)
-      const finMes = new Date()
+      const finMes = getBuenosAiresDate()
       finMes.setMonth(finMes.getMonth() + 1)
       finMes.setDate(0)
 
@@ -673,7 +674,7 @@ export default function ConsultasPage() {
                     <button
                       onClick={() => {
                         cargarPlanes()
-                        setFechaInicioPlan(new Date().toISOString().split('T')[0]) // Fecha actual por defecto
+                        setFechaInicioPlan(getBuenosAiresDateString()) // Fecha actual por defecto
                         setShowPlanModal(true)
                       }}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -687,7 +688,7 @@ export default function ConsultasPage() {
                     <button
                       onClick={() => {
                         cargarPlanes()
-                        setFechaInicioPlan(new Date().toISOString().split('T')[0]) // Fecha actual por defecto
+                        setFechaInicioPlan(getBuenosAiresDateString()) // Fecha actual por defecto
                         setShowPlanModal(true)
                       }}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
@@ -744,7 +745,7 @@ export default function ConsultasPage() {
                       id="fechaInicio"
                       value={fechaInicioPlan}
                       onChange={(e) => setFechaInicioPlan(e.target.value)}
-                      max={new Date().toISOString().split('T')[0]} // No puede ser superior a hoy
+                      max={getBuenosAiresDateString()} // No puede ser superior a hoy
                       className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                     <p className="text-xs text-blue-600 mt-1">
@@ -837,7 +838,7 @@ export default function ConsultasPage() {
                       id="nuevaFechaInicio"
                       value={nuevaFechaInicio}
                       onChange={(e) => setNuevaFechaInicio(e.target.value)}
-                      max={new Date().toISOString().split('T')[0]} // No puede ser superior a hoy
+                      max={getBuenosAiresDateString()} // No puede ser superior a hoy
                       className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                     

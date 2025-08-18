@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User, Calendar, CreditCard, Activity } from 'lucide-react'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface ClienteData {
   id: string
@@ -64,7 +65,7 @@ export default function MemberDashboard() {
 
         if (cliente) {
           // Contar asistencias del último mes
-          const lastMonth = new Date()
+          const lastMonth = getBuenosAiresDate()
           lastMonth.setMonth(lastMonth.getMonth() - 1)
           
           const { count: asistenciasCount } = await supabase

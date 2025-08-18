@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Users, CreditCard, Calendar, TrendingUp } from 'lucide-react'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface Stats {
   totalClientes: number
@@ -57,7 +58,7 @@ export default function DashboardPage() {
           supabase
             .from('asistencias')
             .select('*', { count: 'exact', head: true })
-            .eq('fecha', new Date().toISOString().split('T')[0])
+            .eq('fecha', getBuenosAiresDateString())
             .in('cliente_id', 
               await supabase
                 .from('clientes')

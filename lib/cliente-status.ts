@@ -1,9 +1,10 @@
 import { supabase } from './supabase'
+import { getBuenosAiresDateString, getBuenosAiresDate } from './timezone-utils'
 
 // Actualizar estado de clientes según vigencia de planes
 export async function actualizarEstadosClientes(gimnasioId: string) {
   try {
-    const hoy = new Date().toISOString().split('T')[0]
+    const hoy = getBuenosAiresDateString()
     
     // Obtener todos los clientes del gimnasio con sus inscripciones
     const { data: clientes, error } = await supabase
@@ -92,7 +93,7 @@ export async function actualizarEstadosClientes(gimnasioId: string) {
 // Obtener clientes con problemas de membresía (para AI Coach)
 export async function getClientesConProblemas(gimnasioId: string) {
   try {
-    const hoy = new Date().toISOString().split('T')[0]
+    const hoy = getBuenosAiresDateString()
     
     const { data: clientes, error } = await supabase
       .from('clientes')
@@ -147,7 +148,7 @@ export async function getClientesConProblemas(gimnasioId: string) {
       let diasSinVenir = 0
       if (ultimaAsistencia) {
         const fechaUltimaAsistencia = new Date(ultimaAsistencia.fecha)
-        const hoyDate = new Date()
+        const hoyDate = getBuenosAiresDate()
         diasSinVenir = Math.floor((hoyDate.getTime() - fechaUltimaAsistencia.getTime()) / (1000 * 60 * 60 * 24))
       } else {
         diasSinVenir = 30 // Nunca ha venido

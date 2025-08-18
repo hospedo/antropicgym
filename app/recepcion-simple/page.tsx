@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Monitor } from 'lucide-react'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface ClienteInfo {
   id: string
@@ -118,8 +119,8 @@ export default function RecepcionSimple() {
         .from('asistencias')
         .insert({
           cliente_id: clienteInfo.id,
-          fecha: new Date().toISOString().split('T')[0],
-          hora: new Date().toTimeString().split(' ')[0]
+          fecha: getBuenosAiresDateString(),
+          hora: getBuenosAiresDate().toTimeString().split(' ')[0]
         })
 
       if (error) {
@@ -143,10 +144,10 @@ export default function RecepcionSimple() {
   }
 
   const planActivo = clienteInfo?.inscripciones?.find(
-    i => i.estado === 'activa' && new Date(i.fecha_fin) >= new Date()
+    i => i.estado === 'activa' && new Date(i.fecha_fin) >= getBuenosAiresDate()
   )
 
-  const hoy = new Date().toLocaleDateString()
+  const hoy = getBuenosAiresDate().toLocaleDateString()
 
   return (
     <div className="min-h-screen bg-gray-50">

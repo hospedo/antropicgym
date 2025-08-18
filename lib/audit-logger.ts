@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { LogMembresiaInsert, AccionMembresia } from '@/types'
+import { getBuenosAiresTimestamp } from './timezone-utils'
 
 export class AuditLogger {
   /**
@@ -47,7 +48,7 @@ export class AuditLogger {
         datos_nuevos: datosNuevos || null,
         metadatos: {
           ...metadatos,
-          timestamp: new Date().toISOString(),
+          timestamp: getBuenosAiresTimestamp(),
           user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
         }
       }

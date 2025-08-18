@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Cliente, Asistencia } from '@/types'
 import { Search, UserCheck, Calendar, Clock, Users } from 'lucide-react'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface AsistenciaConCliente extends Asistencia {
   cliente: Cliente
@@ -13,7 +14,7 @@ export default function AsistenciasPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [asistenciasHoy, setAsistenciasHoy] = useState<AsistenciaConCliente[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(getBuenosAiresDateString())
   const [loading, setLoading] = useState(true)
   const [gimnasioId, setGimnasioId] = useState<string>('')
 
@@ -71,7 +72,7 @@ export default function AsistenciasPage() {
 
   const handleCheckIn = async (clienteId: string) => {
     try {
-      const now = new Date()
+      const now = getBuenosAiresDate()
       const hora = now.toTimeString().split(' ')[0].substring(0, 5)
 
       const { data, error } = await supabase

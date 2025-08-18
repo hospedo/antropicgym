@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Cliente, Inscripcion, PagoInsert } from '@/types'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface InscripcionConPlan extends Inscripcion {
   plan: { nombre: string; precio: number }
@@ -17,7 +18,7 @@ export default function NuevoPagoPage() {
     inscripcion_id: '',
     monto: 0,
     metodo_pago: 'efectivo',
-    fecha_pago: new Date().toISOString().split('T')[0],
+    fecha_pago: getBuenosAiresDateString(),
     observaciones: ''
   })
   const [loading, setLoading] = useState(true)

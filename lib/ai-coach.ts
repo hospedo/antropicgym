@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getBuenosAiresDateString, getBuenosAiresDate } from './timezone-utils'
 
 // Tipos para el AI Coach
 export interface ClienteAusencia {
@@ -35,7 +36,7 @@ export async function detectarClientesAusentes(gimnasioId: string): Promise<Clie
   const { ejecutarMantenimientoClientes } = await import('./cliente-status')
   await ejecutarMantenimientoClientes(gimnasioId)
   
-  const hoy = new Date().toISOString().split('T')[0]
+  const hoy = getBuenosAiresDateString()
   
   // Buscar clientes con cuentas que tengan problemas
   const { data: clientesConCuenta } = await supabase
@@ -97,7 +98,7 @@ export async function detectarClientesAusentes(gimnasioId: string): Promise<Clie
 
     if (ultimaAsistencia) {
       const fechaUltimaAsistencia = new Date(ultimaAsistencia.fecha)
-      const hoyDate = new Date()
+      const hoyDate = getBuenosAiresDate()
       diasSinVenir = Math.floor((hoyDate.getTime() - fechaUltimaAsistencia.getTime()) / (1000 * 60 * 60 * 24))
       ultimaFecha = ultimaAsistencia.fecha
     } else {
@@ -324,7 +325,7 @@ export async function ejecutarChequeoAusencias(gimnasioId: string) {
     
     for (const cliente of clientesAusentes) {
       // Verificar si ya se generó contenido hoy para este cliente
-      const hoy = new Date().toISOString().split('T')[0]
+      const hoy = getBuenosAiresDateString()
       
       // Crear tabla para tracking de contenido generado
       const { data: yaGenerado } = await supabase

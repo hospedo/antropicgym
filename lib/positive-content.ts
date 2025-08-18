@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getBuenosAiresDateString, getBuenosAiresDate } from './timezone-utils'
 
 // Tipos para contenido positivo
 export interface ClienteDestacado {
@@ -21,10 +22,10 @@ export interface ClienteDestacado {
 
 // Detectar clientes que merecen reconocimiento
 export async function detectarClientesDestacados(gimnasioId: string): Promise<ClienteDestacado[]> {
-  const hoy = new Date().toISOString().split('T')[0]
-  const hace7Dias = new Date()
+  const hoy = getBuenosAiresDateString()
+  const hace7Dias = getBuenosAiresDate()
   hace7Dias.setDate(hace7Dias.getDate() - 7)
-  const hace30Dias = new Date()
+  const hace30Dias = getBuenosAiresDate()
   hace30Dias.setDate(hace30Dias.getDate() - 30)
 
   // Obtener clientes activos con cuentas
@@ -144,7 +145,7 @@ function calcularDiasConsecutivos(asistencias: Array<{fecha: string}>, fechaHoy:
 
 // Verificar si es cliente nuevo (menos de 30 días)
 function esClienteNuevo(fechaCreacion: string): boolean {
-  const hace30Dias = new Date()
+  const hace30Dias = getBuenosAiresDate()
   hace30Dias.setDate(hace30Dias.getDate() - 30)
   return new Date(fechaCreacion) > hace30Dias
 }
@@ -269,7 +270,7 @@ export async function ejecutarDeteccionPositiva(gimnasioId: string) {
       const contenido = contenidoGenerado[i]
       
       // Verificar si ya se generó contenido positivo hoy para este cliente
-      const hoy = new Date().toISOString().split('T')[0]
+      const hoy = getBuenosAiresDateString()
       
       const { data: yaGenerado } = await supabase
         .from('ai_content_generated')

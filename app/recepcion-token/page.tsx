@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Monitor, Building, Wifi, WifiOff } from 'lucide-react'
+import { getBuenosAiresDate, getBuenosAiresDateString, getBuenosAiresISOString } from '@/lib/timezone-utils'
 
 interface GimnasioInfo {
   id: string
@@ -180,8 +181,8 @@ export default function RecepcionToken() {
       const planElegido = planesDisponibles.find(p => p.id === planSeleccionado)
       if (!planElegido) return
 
-      const fechaInicio = new Date()
-      const fechaFin = new Date()
+      const fechaInicio = getBuenosAiresDate()
+      const fechaFin = getBuenosAiresDate()
       fechaFin.setDate(fechaInicio.getDate() + planElegido.duracion_dias)
 
       // Crear nueva inscripción
@@ -210,7 +211,7 @@ export default function RecepcionToken() {
           recepcionista: recepcionistaActual,
           accion: 'renovacion_plan',
           detalles: `Plan renovado: ${planElegido.nombre} - $${planElegido.precio}`,
-          fecha: new Date().toISOString()
+          fecha: getBuenosAiresISOString()
         })
 
       alert(`✅ Plan renovado exitosamente por ${recepcionistaActual}!`)
@@ -325,8 +326,8 @@ export default function RecepcionToken() {
         .from('asistencias')
         .insert({
           cliente_id: clienteInfo.id,
-          fecha: new Date().toISOString().split('T')[0],
-          hora: new Date().toTimeString().split(' ')[0]
+          fecha: getBuenosAiresDateString(),
+          hora: getBuenosAiresDate().toTimeString().split(' ')[0]
         })
 
       if (error) {
@@ -350,10 +351,10 @@ export default function RecepcionToken() {
   }
 
   const planActivo = clienteInfo?.inscripciones?.find(
-    i => i.estado === 'activa' && new Date(i.fecha_fin) >= new Date()
+    i => i.estado === 'activa' && new Date(i.fecha_fin) >= getBuenosAiresDate()
   )
 
-  const hoy = new Date().toLocaleDateString()
+  const hoy = getBuenosAiresDate().toLocaleDateString()
 
   // Loading de validación
   if (validatingToken) {
@@ -724,8 +725,8 @@ export default function RecepcionToken() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   {(() => {
                     const plan = planesDisponibles.find(p => p.id === planSeleccionado)
-                    const fechaInicio = new Date()
-                    const fechaFin = new Date()
+                    const fechaInicio = getBuenosAiresDate()
+                    const fechaFin = getBuenosAiresDate()
                     fechaFin.setDate(fechaInicio.getDate() + plan!.duracion_dias)
                     
                     return (

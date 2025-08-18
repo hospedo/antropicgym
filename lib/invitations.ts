@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getBuenosAiresDate, getBuenosAiresISOString } from './timezone-utils'
 
 // Generar código de invitación simple
 export function generateInvitationCode(): string {
@@ -8,7 +9,7 @@ export function generateInvitationCode(): string {
 // Crear invitación para un cliente
 export async function createInvitation(gimnasioId: string, clienteId: string) {
   const codigo = generateInvitationCode()
-  const expiresAt = new Date()
+  const expiresAt = getBuenosAiresDate()
   expiresAt.setDate(expiresAt.getDate() + 7) // Expira en 7 días
   
   const { data, error } = await supabase
@@ -32,7 +33,7 @@ export async function verifyInvitationCode(codigo: string) {
     .select('*, clientes(id, nombre, apellido, email, gimnasio_id), gimnasios(nombre)')
     .eq('codigo', codigo)
     .eq('usado', false)
-    .gt('expires_at', new Date().toISOString())
+    .gt('expires_at', getBuenosAiresISOString())
     .single()
     
   return { data, error }
