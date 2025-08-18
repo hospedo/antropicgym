@@ -84,7 +84,7 @@ export default function NuevoClientePage() {
                 name="nombre"
                 id="nombre"
                 required
-                value={formData.nombre}
+                value={formData.nombre || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -99,7 +99,7 @@ export default function NuevoClientePage() {
                 name="apellido"
                 id="apellido"
                 required
-                value={formData.apellido}
+                value={formData.apellido || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -113,7 +113,7 @@ export default function NuevoClientePage() {
                 type="email"
                 name="email"
                 id="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -127,7 +127,7 @@ export default function NuevoClientePage() {
                 type="tel"
                 name="telefono"
                 id="telefono"
-                value={formData.telefono}
+                value={formData.telefono || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -141,7 +141,7 @@ export default function NuevoClientePage() {
                 type="text"
                 name="documento"
                 id="documento"
-                value={formData.documento}
+                value={formData.documento || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -155,7 +155,7 @@ export default function NuevoClientePage() {
                 type="date"
                 name="fecha_nacimiento"
                 id="fecha_nacimiento"
-                value={formData.fecha_nacimiento}
+                value={formData.fecha_nacimiento || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -170,7 +170,7 @@ export default function NuevoClientePage() {
               type="text"
               name="direccion"
               id="direccion"
-              value={formData.direccion}
+              value={formData.direccion || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
@@ -184,7 +184,7 @@ export default function NuevoClientePage() {
               name="observaciones"
               id="observaciones"
               rows={3}
-              value={formData.observaciones}
+              value={formData.observaciones || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
