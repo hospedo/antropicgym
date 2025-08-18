@@ -186,7 +186,7 @@ export default function EditarClientePage() {
                 type="date"
                 name="fecha_nacimiento"
                 id="fecha_nacimiento"
-                value={formData.fecha_nacimiento}
+                value={formData.fecha_nacimiento || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
