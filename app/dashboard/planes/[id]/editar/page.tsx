@@ -123,7 +123,7 @@ export default function EditarPlanPage() {
               name="descripcion"
               id="descripcion"
               rows={3}
-              value={formData.descripcion}
+              value={formData.descripcion || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
