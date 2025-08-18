@@ -271,7 +271,7 @@ export default function NuevoPagoPage() {
               id="observaciones"
               name="observaciones"
               rows={3}
-              value={formData.observaciones}
+              value={formData.observaciones || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               placeholder="Notas adicionales sobre el pago..."
