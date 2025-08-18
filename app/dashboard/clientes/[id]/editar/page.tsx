@@ -115,7 +115,7 @@ export default function EditarClientePage() {
                 name="nombre"
                 id="nombre"
                 required
-                value={formData.nombre}
+                value={formData.nombre || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -130,7 +130,7 @@ export default function EditarClientePage() {
                 name="apellido"
                 id="apellido"
                 required
-                value={formData.apellido}
+                value={formData.apellido || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -158,7 +158,7 @@ export default function EditarClientePage() {
                 type="tel"
                 name="telefono"
                 id="telefono"
-                value={formData.telefono}
+                value={formData.telefono || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -172,7 +172,7 @@ export default function EditarClientePage() {
                 type="text"
                 name="documento"
                 id="documento"
-                value={formData.documento}
+                value={formData.documento || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
