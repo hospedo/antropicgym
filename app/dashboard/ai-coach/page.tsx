@@ -96,7 +96,7 @@ export default function AICoachDashboard() {
       await cargarClientesAusentes(gimnasioId)
       
       // Mostrar resultados (opcional - puedes agregar un toast o modal)
-      if (resultado.actualizaciones.actualizaciones.length > 0) {
+      if (resultado.actualizaciones?.actualizaciones?.length > 0) {
         alert(`Se actualizaron ${resultado.actualizaciones.actualizaciones.length} clientes`)
       } else {
         alert('Todos los estados están actualizados')
