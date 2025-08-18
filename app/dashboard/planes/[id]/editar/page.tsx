@@ -109,7 +109,7 @@ export default function EditarPlanPage() {
               name="nombre"
               id="nombre"
               required
-              value={formData.nombre}
+              value={formData.nombre || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
@@ -141,7 +141,7 @@ export default function EditarPlanPage() {
                 required
                 min="0"
                 step="0.01"
-                value={formData.precio}
+                value={formData.precio || 0}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -154,7 +154,7 @@ export default function EditarPlanPage() {
               <select
                 name="duracion_dias"
                 id="duracion_dias"
-                value={formData.duracion_dias}
+                value={formData.duracion_dias || 30}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
@@ -174,7 +174,7 @@ export default function EditarPlanPage() {
               type="checkbox"
               name="activo"
               id="activo"
-              checked={formData.activo}
+              checked={formData.activo || false}
               onChange={handleChange}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />

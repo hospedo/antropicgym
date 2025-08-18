@@ -170,7 +170,7 @@ export default function NuevoPagoPage() {
               <select
                 id="cliente_id"
                 name="cliente_id"
-                value={formData.cliente_id}
+                value={formData.cliente_id || ''}
                 onChange={(e) => handleClienteChange(e.target.value)}
                 required
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -191,7 +191,7 @@ export default function NuevoPagoPage() {
               <select
                 id="inscripcion_id"
                 name="inscripcion_id"
-                value={formData.inscripcion_id}
+                value={formData.inscripcion_id || ''}
                 onChange={(e) => handleInscripcionChange(e.target.value)}
                 required
                 disabled={!formData.cliente_id}
@@ -221,7 +221,7 @@ export default function NuevoPagoPage() {
                 name="monto"
                 step="0.01"
                 min="0"
-                value={formData.monto}
+                value={formData.monto || 0}
                 onChange={handleChange}
                 required
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -235,7 +235,7 @@ export default function NuevoPagoPage() {
               <select
                 id="metodo_pago"
                 name="metodo_pago"
-                value={formData.metodo_pago}
+                value={formData.metodo_pago || ''}
                 onChange={handleChange}
                 required
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -255,7 +255,7 @@ export default function NuevoPagoPage() {
                 type="date"
                 id="fecha_pago"
                 name="fecha_pago"
-                value={formData.fecha_pago}
+                value={formData.fecha_pago || ''}
                 onChange={handleChange}
                 required
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
