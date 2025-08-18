@@ -97,7 +97,7 @@ export default function AICoachDashboard() {
       
       // Mostrar resultados (opcional - puedes agregar un toast o modal)
       if (resultado.actualizaciones?.success && resultado.actualizaciones?.actualizaciones?.length > 0) {
-        alert(`Se actualizaron ${resultado.actualizaciones.actualizaciones.length} clientes`)
+        alert(`Se actualizaron ${resultado.actualizaciones?.actualizaciones?.length || 0} clientes`)
       } else {
         alert('Todos los estados están actualizados')
       }
