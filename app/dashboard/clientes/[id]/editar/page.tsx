@@ -201,7 +201,7 @@ export default function EditarClientePage() {
               type="text"
               name="direccion"
               id="direccion"
-              value={formData.direccion}
+              value={formData.direccion || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
@@ -215,7 +215,7 @@ export default function EditarClientePage() {
               name="observaciones"
               id="observaciones"
               rows={3}
-              value={formData.observaciones}
+              value={formData.observaciones || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
