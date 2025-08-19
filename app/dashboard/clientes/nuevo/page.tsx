@@ -57,7 +57,7 @@ export default function NuevoClientePage() {
 
       router.push('/dashboard/clientes')
     } catch (err: any) {
-      setError(err.message || 'Error al crear el cliente')
+      setError(err instanceof Error ? err.message : 'Error al crear el cliente')
     } finally {
       setLoading(false)
     }

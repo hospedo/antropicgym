@@ -49,7 +49,7 @@ export default function DebugPage() {
         setError('')
       }
     } catch (err) {
-      setError('Error inesperado en login: ' + err.message)
+      setError('Error inesperado en login: ' + (err instanceof Error ? err.message : 'Error desconocido'))
     }
   }
 

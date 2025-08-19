@@ -125,7 +125,7 @@ export default function ConfiguracionPage() {
       }, 1500)
 
     } catch (err: any) {
-      setError(err.message || 'Error al guardar la configuración')
+      setError(err instanceof Error ? err.message : 'Error al guardar la configuración')
     } finally {
       setSaving(false)
     }

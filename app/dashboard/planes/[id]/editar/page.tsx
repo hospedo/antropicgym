@@ -75,7 +75,7 @@ export default function EditarPlanPage() {
 
       router.push('/dashboard/planes')
     } catch (err: any) {
-      setError(err.message || 'Error al actualizar el plan')
+      setError(err instanceof Error ? err.message : 'Error al actualizar el plan')
     } finally {
       setSaving(false)
     }

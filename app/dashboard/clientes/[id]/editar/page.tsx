@@ -80,7 +80,7 @@ export default function EditarClientePage() {
 
       router.push(`/dashboard/clientes/${id}`)
     } catch (err: any) {
-      setError(err.message || 'Error al actualizar el cliente')
+      setError(err instanceof Error ? err.message : 'Error al actualizar el cliente')
     } finally {
       setSaving(false)
     }

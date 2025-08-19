@@ -169,7 +169,7 @@ export default function ConsultasPage() {
       consultarMiembro()
 
     } catch (err: any) {
-      alert(`Error: ${err.message}`)
+      alert(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`)
     } finally {
       setAssigningPlan(false)
     }
@@ -245,7 +245,7 @@ export default function ConsultasPage() {
       consultarMiembro()
 
     } catch (err: any) {
-      alert(`Error: ${err.message}`)
+      alert(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`)
     } finally {
       setModifyingPlan(false)
     }
@@ -290,7 +290,7 @@ export default function ConsultasPage() {
       consultarMiembro()
 
     } catch (err: any) {
-      alert(`Error: ${err.message}`)
+      alert(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`)
     } finally {
       setRegistrandoAsistencia(false)
     }
@@ -415,7 +415,7 @@ export default function ConsultasPage() {
       })
 
     } catch (err: any) {
-      setError(err.message || 'Error al consultar miembro')
+      setError(err instanceof Error ? err.message : 'Error al consultar miembro')
     } finally {
       setLoading(false)
     }

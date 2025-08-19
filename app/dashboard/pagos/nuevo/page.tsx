@@ -137,7 +137,7 @@ export default function NuevoPagoPage() {
 
       router.push('/dashboard/pagos')
     } catch (err: any) {
-      setError(err.message || 'Error al registrar el pago')
+      setError(err instanceof Error ? err.message : 'Error al registrar el pago')
     } finally {
       setSaving(false)
     }

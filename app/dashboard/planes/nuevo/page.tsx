@@ -57,7 +57,7 @@ export default function NuevoPlanPage() {
 
       router.push('/dashboard/planes')
     } catch (err: any) {
-      setError(err.message || 'Error al crear el plan')
+      setError(err instanceof Error ? err.message : 'Error al crear el plan')
     } finally {
       setLoading(false)
     }
