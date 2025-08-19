@@ -18,10 +18,10 @@ interface ClienteInfo {
     estado: string
     fecha_inicio: string
     fecha_fin: string
-    planes: {
+    planes: Array<{
       nombre: string
       precio: number
-    }
+    }>
   }>
   ultima_asistencia?: string
   total_asistencias: number
@@ -140,7 +140,11 @@ export default function RecepcionConsultas() {
       setClienteInfo({
         ...cliente,
         ultima_asistencia: ultimaAsistencia?.fecha,
-        total_asistencias: totalAsistencias || 0
+        total_asistencias: totalAsistencias || 0,
+        inscripciones: cliente.inscripciones.map(inscripcion => ({
+          ...inscripcion,
+          planes: inscripcion.planes || []
+        }))
       })
 
     } catch (error) {
@@ -275,7 +279,7 @@ export default function RecepcionConsultas() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-green-800">{planActivo.planes.nombre}</p>
+                      <p className="font-medium text-green-800">{planActivo.planes[0]?.nombre || 'Plan sin nombre'}</p>
                       <p className="text-green-600 text-sm">
                         Vence: {new Date(planActivo.fecha_fin).toLocaleDateString()}
                       </p>
