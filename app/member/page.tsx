@@ -86,7 +86,11 @@ export default function MemberDashboard() {
           setClienteData({
             ...cliente,
             asistencias_count: asistenciasCount || 0,
-            ultimo_pago: ultimoPago
+            ultimo_pago: ultimoPago,
+            inscripciones: cliente.inscripciones.map(inscripcion => ({
+              ...inscripcion,
+              planes: inscripcion.planes[0] || { nombre: '', precio: 0 }
+            }))
           })
         }
       } catch (error) {
