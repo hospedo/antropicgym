@@ -15,7 +15,7 @@ export default function TestLogin() {
       setStatus(`Session check: ${error ? error.message : 'OK'}`)
       setUser(session?.user || null)
     } catch (error) {
-      setStatus(`Error: ${error.message}`)
+      setStatus(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
 
@@ -35,7 +35,7 @@ export default function TestLogin() {
         setUser(data.user)
       }
     } catch (error) {
-      setStatus(`Error inesperado: ${error.message}`)
+      setStatus(`Error inesperado: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
 
