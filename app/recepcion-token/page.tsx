@@ -26,10 +26,10 @@ interface ClienteInfo {
     estado: string
     fecha_inicio: string
     fecha_fin: string
-    planes: {
+    planes: Array<{
       nombre: string
       precio: number
-    }
+    }>
   }>
   ultima_asistencia?: string
   total_asistencias: number
@@ -306,7 +306,11 @@ export default function RecepcionToken() {
       setClienteInfo({
         ...cliente,
         ultima_asistencia: ultimaAsistencia?.fecha,
-        total_asistencias: totalAsistencias || 0
+        total_asistencias: totalAsistencias || 0,
+        inscripciones: cliente.inscripciones.map(inscripcion => ({
+          ...inscripcion,
+          planes: inscripcion.planes || []
+        }))
       })
 
     } catch (error) {
@@ -521,7 +525,7 @@ export default function RecepcionToken() {
                     <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-2xl font-bold text-green-800">{planActivo.planes.nombre}</p>
+                          <p className="text-2xl font-bold text-green-800">{planActivo.planes[0]?.nombre || 'Plan sin nombre'}</p>
                           <p className="text-green-600 text-lg font-medium">
                             Vence: {new Date(planActivo.fecha_fin).toLocaleDateString()}
                           </p>
