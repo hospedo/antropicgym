@@ -28,7 +28,7 @@ export default function DebugPage() {
         }
       } catch (err) {
         setConnectionStatus('Error inesperado')
-        setError(err.message)
+        setError(err instanceof Error ? err.message : 'Error desconocido')
       }
     }
 
