@@ -41,7 +41,7 @@ export default function DebugCliente() {
         .single()
 
       if (error) {
-        setClienteInfo({ error: error.message })
+        setClienteInfo({ error: error instanceof Error ? error.message : 'Error desconocido' })
       } else {
         // Obtener asistencias
         const { data: asistencias } = await supabase
@@ -64,7 +64,7 @@ export default function DebugCliente() {
         })
       }
     } catch (error) {
-      setClienteInfo({ error: error.message })
+      setClienteInfo({ error: error instanceof Error ? error.message : 'Error desconocido' })
     } finally {
       setLoading(false)
     }
@@ -98,7 +98,7 @@ El cliente puede usar este código en /auth/register-member`
         alert('Error: ' + resultado.error)
       }
     } catch (error) {
-      alert('Error: ' + error.message)
+      alert('Error: ' + (error instanceof Error ? error.message : 'Error desconocido'))
     }
   }
 
