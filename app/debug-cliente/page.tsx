@@ -85,8 +85,8 @@ export default function DebugCliente() {
         const mensaje = `✅ ${resultado.mensaje}
 
 📋 DATOS PARA EL CLIENTE:
-👤 Cliente: ${resultado.cliente.nombre} ${resultado.cliente.apellido}
-📧 Email: ${resultado.cliente.email}
+👤 Cliente: ${resultado.cliente?.nombre || 'N/A'} ${resultado.cliente?.apellido || 'N/A'}
+📧 Email: ${resultado.cliente?.email || 'N/A'}
 🔑 Código: ${resultado.codigo}
 🌐 Link directo: ${window.location.origin}${resultado.linkRegistro}
 
