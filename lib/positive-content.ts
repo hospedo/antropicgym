@@ -184,14 +184,14 @@ export function generarContenidoPositivo(cliente: ClienteDestacado) {
     },
     racha: {
       titulos: [
-        `⚡ ${cliente.nombre} está EN RACHA: ${cliente.datos_extra?.asistencias_semana} veces esta semana`,
-        `🎯 ENFOQUE TOTAL: ${cliente.nombre} vino ${cliente.datos_extra?.asistencias_semana} veces en 7 días`,
-        `💥 ${cliente.nombre} está que no para: ${cliente.datos_extra?.asistencias_semana}/7 días esta semana`
+        `⚡ ${cliente.nombre} está EN RACHA: ${(cliente.datos_extra as any)?.asistencias_semana} veces esta semana`,
+        `🎯 ENFOQUE TOTAL: ${cliente.nombre} vino ${(cliente.datos_extra as any)?.asistencias_semana} veces en 7 días`,
+        `💥 ${cliente.nombre} está que no para: ${(cliente.datos_extra as any)?.asistencias_semana}/7 días esta semana`
       ],
       descripciones: [
-        `¡${cliente.nombre} está IMPARABLE! ⚡ ${cliente.datos_extra?.asistencias_semana} entrenamientos esta semana. ¡Esa es la actitud que queremos ver!`,
-        `👏 OVACIÓN para ${cliente.nombre}: ${cliente.datos_extra?.asistencias_semana} días de entrenamiento esta semana. ¡ASÍ SE HACE!`,
-        `🔥 ${cliente.nombre} entendió la tarea: ${cliente.datos_extra?.asistencias_semana} entrenamientos en una semana. ¡BRUTAL!`
+        `¡${cliente.nombre} está IMPARABLE! ⚡ ${(cliente.datos_extra as any)?.asistencias_semana} entrenamientos esta semana. ¡Esa es la actitud que queremos ver!`,
+        `👏 OVACIÓN para ${cliente.nombre}: ${(cliente.datos_extra as any)?.asistencias_semana} días de entrenamiento esta semana. ¡ASÍ SE HACE!`,
+        `🔥 ${cliente.nombre} entendió la tarea: ${(cliente.datos_extra as any)?.asistencias_semana} entrenamientos en una semana. ¡BRUTAL!`
       ],
       hashtags: ['#EnRacha', '#Frecuencia', '#Dedicacion', '#GymLife', '#NoExcuses']
     },
@@ -210,27 +210,27 @@ export function generarContenidoPositivo(cliente: ClienteDestacado) {
     },
     nuevo: {
       titulos: [
-        `🌟 NUEVO GUERRERO: ${cliente.nombre} lleva ${cliente.datos_extra?.asistencias_desde_inicio} entrenamientos desde que empezó`,
-        `💪 TALENTO NUEVO: ${cliente.nombre} está dominando el gym con ${cliente.datos_extra?.asistencias_desde_inicio} sesiones`,
-        `🚀 ${cliente.nombre} llegó para quedarse: ${cliente.datos_extra?.asistencias_desde_inicio} entrenamientos y subiendo`
+        `🌟 NUEVO GUERRERO: ${cliente.nombre} lleva ${(cliente.datos_extra as any)?.asistencias_desde_inicio} entrenamientos desde que empezó`,
+        `💪 TALENTO NUEVO: ${cliente.nombre} está dominando el gym con ${(cliente.datos_extra as any)?.asistencias_desde_inicio} sesiones`,
+        `🚀 ${cliente.nombre} llegó para quedarse: ${(cliente.datos_extra as any)?.asistencias_desde_inicio} entrenamientos y subiendo`
       ],
       descripciones: [
-        `¡Tenemos talento nuevo! 🌟 ${cliente.nombre} lleva ${cliente.datos_extra?.asistencias_desde_inicio} entrenamientos desde que empezó. ¡Así se comienza!`,
-        `👏 BIENVENIDO al club de los constantes, ${cliente.nombre}. ${cliente.datos_extra?.asistencias_desde_inicio} sesiones y ya está dando cátedra`,
-        `💥 ${cliente.nombre} entendió rápido de qué se trata esto: ${cliente.datos_extra?.asistencias_desde_inicio} entrenamientos en sus primeras semanas`
+        `¡Tenemos talento nuevo! 🌟 ${cliente.nombre} lleva ${(cliente.datos_extra as any)?.asistencias_desde_inicio} entrenamientos desde que empezó. ¡Así se comienza!`,
+        `👏 BIENVENIDO al club de los constantes, ${cliente.nombre}. ${(cliente.datos_extra as any)?.asistencias_desde_inicio} sesiones y ya está dando cátedra`,
+        `💥 ${cliente.nombre} entendió rápido de qué se trata esto: ${(cliente.datos_extra as any)?.asistencias_desde_inicio} entrenamientos en sus primeras semanas`
       ],
       hashtags: ['#NuevoTalento', '#Bienvenido', '#Constancia', '#FreshStart', '#GymFamily']
     },
     meta: {
       titulos: [
-        `🏆 HITO ÉPICO: ${cliente.nombre} alcanzó ${cliente.datos_extra?.total_asistencias} entrenamientos totales`,
-        `💥 LEYENDA EN CONSTRUCCIÓN: ${cliente.nombre} - ${cliente.datos_extra?.total_asistencias} entrenamientos completados`,
-        `👑 HALL OF FAME: ${cliente.nombre} llegó a ${cliente.datos_extra?.total_asistencias} sesiones de entrenamiento`
+        `🏆 HITO ÉPICO: ${cliente.nombre} alcanzó ${(cliente.datos_extra as any)?.total_asistencias} entrenamientos totales`,
+        `💥 LEYENDA EN CONSTRUCCIÓN: ${cliente.nombre} - ${(cliente.datos_extra as any)?.total_asistencias} entrenamientos completados`,
+        `👑 HALL OF FAME: ${cliente.nombre} llegó a ${(cliente.datos_extra as any)?.total_asistencias} sesiones de entrenamiento`
       ],
       descripciones: [
-        `🎉 ¡HISTÓRICO! ${cliente.nombre} acaba de completar su entrenamiento número ${cliente.datos_extra?.total_asistencias}. ¡ESO es DEDICACIÓN!`,
-        `👏 MOMENTO ÉPICO: ${cliente.nombre} alcanzó ${cliente.datos_extra?.total_asistencias} entrenamientos. ¡Cada sesión cuenta!`,
-        `🏆 ${cliente.nombre} acaba de escribir historia: ${cliente.datos_extra?.total_asistencias} entrenamientos oficiales. ¡LEYENDA!`
+        `🎉 ¡HISTÓRICO! ${cliente.nombre} acaba de completar su entrenamiento número ${(cliente.datos_extra as any)?.total_asistencias}. ¡ESO es DEDICACIÓN!`,
+        `👏 MOMENTO ÉPICO: ${cliente.nombre} alcanzó ${(cliente.datos_extra as any)?.total_asistencias} entrenamientos. ¡Cada sesión cuenta!`,
+        `🏆 ${cliente.nombre} acaba de escribir historia: ${(cliente.datos_extra as any)?.total_asistencias} entrenamientos oficiales. ¡LEYENDA!`
       ],
       hashtags: ['#Hito', '#Leyenda', '#Dedicacion', '#Goals', '#Historia']
     }
