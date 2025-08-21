@@ -131,7 +131,7 @@ export async function detectarClientesAusentes(gimnasioId: string): Promise<Clie
         apellido: cliente.apellido,
         dias_sin_venir: diasSinVenir,
         ultima_asistencia: ultimaFecha,
-        gimnasio: cliente.gimnasios,
+        gimnasio: cliente.gimnasios?.[0] || { nombre: 'Sin gimnasio' },
         razon_problema: razonProblema,
         plan_vencido: !!planVencido,
         plan_activo: !!planActivo,
