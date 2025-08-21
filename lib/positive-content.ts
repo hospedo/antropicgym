@@ -109,7 +109,7 @@ export async function detectarClientesDestacados(gimnasioId: string): Promise<Cl
         dias_consecutivos: diasConsecutivos,
         total_asistencias: totalAsistenciasMes,
         ultima_asistencia: ultimaAsistencia,
-        gimnasio: cliente.gimnasios,
+        gimnasio: cliente.gimnasios?.[0] || { nombre: 'Sin gimnasio' },
         datos_extra: datosExtra
       })
     }
