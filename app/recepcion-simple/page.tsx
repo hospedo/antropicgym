@@ -102,7 +102,7 @@ export default function RecepcionSimple() {
         total_asistencias: totalAsistencias || 0,
         inscripciones: cliente.inscripciones.map(inscripcion => ({
           ...inscripcion,
-          planes: inscripcion.planes || []
+          planes: Array.isArray(inscripcion.planes) ? inscripcion.planes : [inscripcion.planes].filter(Boolean)
         }))
       })
 
@@ -267,7 +267,7 @@ export default function RecepcionSimple() {
                     <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-2xl font-bold text-green-800">{planActivo.planes[0]?.nombre || 'Plan sin nombre'}</p>
+                          <p className="text-2xl font-bold text-green-800">{(Array.isArray(planActivo.planes) ? planActivo.planes[0]?.nombre : planActivo.planes?.nombre) || 'Plan sin nombre'}</p>
                           <p className="text-green-600 text-lg font-medium">
                             Vence: {new Date(planActivo.fecha_fin).toLocaleDateString()}
                           </p>

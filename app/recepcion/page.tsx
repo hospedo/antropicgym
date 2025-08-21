@@ -143,7 +143,7 @@ export default function RecepcionConsultas() {
         total_asistencias: totalAsistencias || 0,
         inscripciones: cliente.inscripciones.map(inscripcion => ({
           ...inscripcion,
-          planes: inscripcion.planes || []
+          planes: Array.isArray(inscripcion.planes) ? inscripcion.planes : [inscripcion.planes].filter(Boolean)
         }))
       })
 
@@ -279,7 +279,7 @@ export default function RecepcionConsultas() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-green-800">{planActivo.planes[0]?.nombre || 'Plan sin nombre'}</p>
+                      <p className="font-medium text-green-800">{(Array.isArray(planActivo.planes) ? planActivo.planes[0]?.nombre : planActivo.planes?.nombre) || 'Plan sin nombre'}</p>
                       <p className="text-green-600 text-sm">
                         Vence: {new Date(planActivo.fecha_fin).toLocaleDateString()}
                       </p>

@@ -89,7 +89,7 @@ export default function MemberDashboard() {
             ultimo_pago: ultimoPago,
             inscripciones: cliente.inscripciones.map(inscripcion => ({
               ...inscripcion,
-              planes: inscripcion.planes[0] || { nombre: '', precio: 0 }
+              planes: (Array.isArray(inscripcion.planes) ? inscripcion.planes[0] : inscripcion.planes) || { nombre: '', precio: 0 }
             }))
           })
         }
