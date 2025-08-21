@@ -5,6 +5,11 @@ const nextConfig = {
     // Skip TypeScript errors during build for Vercel deployment
     ignoreBuildErrors: true,
   },
+  // Disable static optimization for dynamic pages that require Supabase
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+  output: 'standalone'
 }
 
 module.exports = nextConfig
