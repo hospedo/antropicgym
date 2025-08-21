@@ -122,7 +122,7 @@ export async function detectarClientesDestacados(gimnasioId: string): Promise<Cl
 function calcularDiasConsecutivos(asistencias: Array<{fecha: string}>, fechaHoy: string): number {
   if (asistencias.length === 0) return 0
 
-  const fechasUnicas = [...new Set(asistencias.map(a => a.fecha))].sort()
+  const fechasUnicas = Array.from(new Set(asistencias.map(a => a.fecha))).sort()
   let diasConsecutivos = 0
   let fechaActual = new Date(fechaHoy)
 
