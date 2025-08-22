@@ -85,62 +85,15 @@ export default function RegisterPage() {
 
       // PASO 3: Si el usuario está confirmado automáticamente
       if (authData.session) {
-        console.log('User auto-confirmed, creating database records...')
+        console.log('User auto-confirmed, database trigger should create records automatically...')
         
-        try {
-          // Crear usuario en tabla usuarios
-          const { error: userError } = await supabase
-            .from('usuarios')
-            .insert({
-              id: authData.user.id,
-              email: authData.user.email,
-              nombre: formData.nombre,
-              telefono: formData.telefono || null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-          
-          if (userError) {
-            console.error('User table error:', userError)
-          } else {
-            console.log('User record created successfully')
-          }
-
-          // Crear gimnasio
-          const { error: gymError } = await supabase
-            .from('gimnasios')
-            .insert({
-              usuario_id: authData.user.id,
-              nombre: formData.nombreGimnasio,
-              direccion: formData.direccion || 'Dirección pendiente',
-              telefono: formData.telefono || 'Teléfono pendiente',
-              email: authData.user.email,
-              horario_apertura: '06:00',
-              horario_cierre: '22:00',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-          
-          if (gymError) {
-            console.error('Gym creation error:', gymError)
-            setError(`⚠️ Advertencia: El gimnasio no se pudo crear automáticamente (${gymError.message}). Podrás configurarlo desde la página de Configuración.`)
-          } else {
-            console.log('Gym created successfully')
-          }
-
-          // Redirigir al dashboard
-          setSuccess('¡Registro exitoso! Redirigiendo al dashboard...')
+        // Esperar un momento para que el trigger de base de datos funcione
+        setTimeout(() => {
+          setSuccess('¡Registro exitoso! El sistema creará automáticamente tu gimnasio. Redirigiendo al dashboard...')
           setTimeout(() => {
             router.push('/dashboard')
           }, 2000)
-
-        } catch (dbError: any) {
-          console.error('Database error:', dbError)
-          setError('⚠️ Error al crear los registros de la base de datos. Podrás configurar tu gimnasio desde la página de Configuración.')
-          setTimeout(() => {
-            router.push('/dashboard')
-          }, 3000)
-        }
+        }, 1000)
       }
 
     } catch (err: any) {
