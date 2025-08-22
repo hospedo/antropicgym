@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { detectarClientesAusentes, ejecutarChequeoAusencias, ClienteAusencia } from '@/lib/ai-coach'
 import { generarMemeConIA, crearContenidoCompleto } from '@/lib/openai-content'
 import { ejecutarDeteccionPositiva } from '@/lib/positive-content'
-import { Bot, Play, Users, Zap, Calendar, MessageSquare, Image, Hash, Star } from 'lucide-react'
+import { Bot, Play, Users, Zap, Calendar, MessageSquare, Image, Hash, Star, MessageCircle, Copy } from 'lucide-react'
+import { enviarPorWhatsApp, formatearMensajeWhatsApp, copiarAlPortapapeles } from '@/lib/whatsapp-utils'
 
 export default function AICoachDashboard() {
   const [gimnasioId, setGimnasioId] = useState<string>('')
@@ -346,6 +347,43 @@ export default function AICoachDashboard() {
                       <div className="bg-green-50 p-4 rounded-lg">
                         <h4 className="font-medium text-green-800 mb-2">Listo para publicar:</h4>
                         <p className="text-green-700 whitespace-pre-line">{contenido.texto_final}</p>
+                        
+                        {/* Botones de acción */}
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <button
+                            onClick={() => enviarPorWhatsApp(formatearMensajeWhatsApp({
+                              titulo: contenido.titulo,
+                              descripcion: contenido.descripcion,
+                              hashtags: contenido.hashtags,
+                              texto_final: contenido.texto_final,
+                              tipo: contenido.tipo
+                            }))}
+                            className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            <span>Enviar por WhatsApp</span>
+                          </button>
+                          
+                          <button
+                            onClick={async () => {
+                              const mensaje = formatearMensajeWhatsApp({
+                                titulo: contenido.titulo,
+                                descripcion: contenido.descripcion,
+                                hashtags: contenido.hashtags,
+                                texto_final: contenido.texto_final,
+                                tipo: contenido.tipo
+                              });
+                              const copiado = await copiarAlPortapapeles(mensaje);
+                              if (copiado) {
+                                alert('¡Mensaje copiado al portapapeles!');
+                              }
+                            }}
+                            className="flex items-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                            <span>Copiar</span>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -405,6 +443,43 @@ export default function AICoachDashboard() {
                         {'\n\n'}
                         {contenido.hashtags?.join(' ')}
                       </p>
+                      
+                      {/* Botones de acción */}
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <button
+                          onClick={() => enviarPorWhatsApp(formatearMensajeWhatsApp({
+                            titulo: contenido.titulo,
+                            descripcion: contenido.descripcion,
+                            hashtags: contenido.hashtags,
+                            texto_final: `${contenido.descripcion}\n\n${contenido.hashtags?.join(' ')}`,
+                            tipo: contenido.tipo_logro || 'celebracion'
+                          }))}
+                          className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span>Enviar por WhatsApp</span>
+                        </button>
+                        
+                        <button
+                          onClick={async () => {
+                            const mensaje = formatearMensajeWhatsApp({
+                              titulo: contenido.titulo,
+                              descripcion: contenido.descripcion,
+                              hashtags: contenido.hashtags,
+                              texto_final: `${contenido.descripcion}\n\n${contenido.hashtags?.join(' ')}`,
+                              tipo: contenido.tipo_logro || 'celebracion'
+                            });
+                            const copiado = await copiarAlPortapapeles(mensaje);
+                            if (copiado) {
+                              alert('¡Mensaje copiado al portapapeles!');
+                            }
+                          }}
+                          className="flex items-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <Copy className="h-4 w-4" />
+                          <span>Copiar</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
