@@ -2,15 +2,15 @@
 
 -- Ver todos los triggers en la base de datos
 SELECT 
-    schemaname, 
-    tablename, 
-    triggername,
-    actionstatement
+    n.nspname as schema_name, 
+    c.relname as table_name, 
+    t.tgname as trigger_name,
+    pg_get_triggerdef(t.oid) as trigger_definition
 FROM pg_trigger t
 JOIN pg_class c ON t.tgrelid = c.oid
 JOIN pg_namespace n ON c.relnamespace = n.oid
-WHERE NOT tgisinternal
-ORDER BY schemaname, tablename, triggername;
+WHERE NOT t.tgisinternal
+ORDER BY n.nspname, c.relname, t.tgname;
 
 -- Ver funciones relacionadas con usuarios/subscriptions
 SELECT 
