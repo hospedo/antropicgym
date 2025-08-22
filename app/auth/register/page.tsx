@@ -39,73 +39,93 @@ export default function RegisterPage() {
     }
 
     try {
+      // Paso 1: Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       })
 
       if (authError) {
-        setError(authError.message)
+        console.error('Auth error:', authError)
+        setError(`Error de autenticación: ${authError.message}`)
         return
       }
 
-      if (authData.user) {
-        try {
-          // 1. Crear usuario en tabla usuarios
-          const { error: userError } = await supabase
-            .from('usuarios')
-            .insert({
-              id: authData.user.id,
-              email: formData.email,
-              nombre: formData.nombre,
-              telefono: formData.telefono
-            })
-
-          if (userError) {
-            console.error('Error creating user:', userError)
-            setError(`Error al crear el usuario: ${userError.message}`)
-            return
-          }
-
-          // 2. Crear gimnasio
-          const { data: gymData, error: gymError } = await supabase
-            .from('gimnasios')
-            .insert({
-              usuario_id: authData.user.id,
-              nombre: formData.nombreGimnasio,
-              direccion: formData.direccion,
-              telefono: formData.telefono,
-              email: formData.email
-            })
-            .select()
-            .single()
-
-          if (gymError) {
-            console.error('Error creating gym:', gymError)
-            setError(`Error al crear el gimnasio: ${gymError.message}`)
-            return
-          }
-
-          // 3. Crear suscripción inicial (manualmente, no dependiendo del trigger)
-          try {
-            const subscriptionResult = await createInitialSubscription(authData.user.id, gymData?.id)
-            if (!subscriptionResult.success) {
-              console.warn('Warning: Could not create initial subscription:', subscriptionResult.error)
-              // No bloquear el registro por esto, la suscripción se puede crear después
-            }
-          } catch (subscriptionError) {
-            console.warn('Warning: Subscription creation failed:', subscriptionError)
-            // Continuar sin bloquear
-          }
-
-          router.push('/dashboard')
-        } catch (generalError) {
-          console.error('General error during registration:', generalError)
-          setError('Error inesperado durante el registro. Intenta nuevamente.')
-        }
+      if (!authData.user) {
+        setError('No se pudo crear el usuario')
+        return
       }
-    } catch (err) {
-      setError('Error inesperado. Intenta nuevamente.')
+
+      console.log('User created successfully:', authData.user.id)
+
+      // Paso 2: Crear entrada en tabla usuarios (con manejo de errores mejorado)
+      try {
+        const { error: userError } = await supabase
+          .from('usuarios')
+          .insert({
+            id: authData.user.id,
+            email: formData.email,
+            nombre: formData.nombre,
+            telefono: formData.telefono || null
+          })
+
+        if (userError) {
+          console.error('Error inserting user:', userError)
+          // Si es error de usuario ya existente, continúa
+          if (userError.code !== '23505') { // 23505 es duplicate key
+            setError(`Error al crear perfil de usuario: ${userError.message}`)
+            return
+          }
+        }
+        console.log('User profile created successfully')
+      } catch (userInsertError) {
+        console.error('Exception inserting user:', userInsertError)
+        setError('Error al crear el perfil de usuario')
+        return
+      }
+
+      // Paso 3: Crear gimnasio (con manejo de errores mejorado)
+      try {
+        const { data: gymData, error: gymError } = await supabase
+          .from('gimnasios')
+          .insert({
+            usuario_id: authData.user.id,
+            nombre: formData.nombreGimnasio,
+            direccion: formData.direccion || null,
+            telefono: formData.telefono || null,
+            email: formData.email
+          })
+          .select()
+          .single()
+
+        if (gymError) {
+          console.error('Error creating gym:', gymError)
+          setError(`Error al crear el gimnasio: ${gymError.message}`)
+          return
+        }
+        console.log('Gym created successfully:', gymData)
+      } catch (gymInsertError) {
+        console.error('Exception inserting gym:', gymInsertError)
+        setError('Error al crear el gimnasio')
+        return
+      }
+
+      // Paso 4: Intentar crear suscripción (sin bloquear el proceso)
+      try {
+        await createInitialSubscription(authData.user.id)
+        console.log('Subscription created successfully')
+      } catch (subscriptionError) {
+        console.warn('Subscription creation failed, but continuing:', subscriptionError)
+        // No bloquear el registro por esto
+      }
+
+      // Éxito: redirigir al dashboard
+      console.log('Registration completed successfully')
+      router.push('/dashboard')
+
+    } catch (err: any) {
+      console.error('Unexpected registration error:', err)
+      setError(`Error inesperado: ${err.message || 'Intenta nuevamente'}`)
     } finally {
       setLoading(false)
     }

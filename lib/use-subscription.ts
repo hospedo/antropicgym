@@ -131,6 +131,8 @@ export function useSubscription(): SubscriptionStatus {
 // Función para crear suscripción inicial (llamar al registrarse)
 export async function createInitialSubscription(userId: string, gimnasioId?: string) {
   try {
+    console.log('Creating initial subscription for user:', userId)
+    
     const { error } = await supabase
       .from('subscriptions')
       .insert({
@@ -141,10 +143,15 @@ export async function createInitialSubscription(userId: string, gimnasioId?: str
         trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 días
       })
 
-    if (error) throw error
+    if (error) {
+      console.error('Subscription creation error:', error)
+      throw error
+    }
 
+    console.log('Subscription created successfully')
     return { success: true }
   } catch (error: any) {
+    console.error('Exception in createInitialSubscription:', error)
     return { success: false, error: error.message }
   }
 }
