@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import Paywall from '@/components/paywall'
 import { detectarClientesAusentes, ejecutarChequeoAusencias, ClienteAusencia } from '@/lib/ai-coach'
 import { generarMemeConIA, crearContenidoCompleto } from '@/lib/openai-content'
 import { ejecutarDeteccionPositiva } from '@/lib/positive-content'
@@ -139,7 +140,8 @@ export default function AICoachDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <Paywall>
+      <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow p-6 text-white">
         <div className="flex items-center space-x-4">
@@ -501,6 +503,7 @@ export default function AICoachDashboard() {
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </Paywall>
   )
 }

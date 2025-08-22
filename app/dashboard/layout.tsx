@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Users, CreditCard, Calendar, Settings, Menu, X, LogOut, Dumbbell, DollarSign, Search, FileText, Bot, Monitor, User } from 'lucide-react'
+import { SubscriptionStatus } from '@/components/paywall'
+import { Users, CreditCard, Calendar, Settings, Menu, X, LogOut, Dumbbell, DollarSign, Search, FileText, Bot, Monitor, User, Bug, Crown } from 'lucide-react'
 
 export default function DashboardLayout({
   children,
@@ -78,8 +79,8 @@ export default function DashboardLayout({
     { name: 'Pagos', href: '/dashboard/pagos', icon: DollarSign },
     { name: '🚀 AI Coach Viral', href: '/dashboard/ai-coach', icon: Bot },
     { name: 'Control Acceso', href: '/dashboard/consultas', icon: Search },
-    { name: 'Acceso Recepción', href: '/dashboard/crear-acceso-recepcion', icon: Monitor },
-    { name: 'Configurar Recepcionistas', href: '/dashboard/configurar-recepcionistas', icon: User },
+    { name: 'Reportar Bug', href: '/dashboard/reportar-bug', icon: Bug },
+    { name: 'Suscripción', href: '/dashboard/suscripcion', icon: Crown },
     { name: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
   ]
 
@@ -120,7 +121,8 @@ export default function DashboardLayout({
               ))}
             </nav>
           </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+          <div className="flex-shrink-0 border-t border-gray-200 p-4 space-y-3">
+            <SubscriptionStatus />
             <button
               onClick={handleSignOut}
               className="flex items-center text-sm text-gray-600 hover:text-gray-900"
@@ -157,7 +159,8 @@ export default function DashboardLayout({
               ))}
             </nav>
           </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+          <div className="flex-shrink-0 border-t border-gray-200 p-4 space-y-3">
+            <SubscriptionStatus />
             <button
               onClick={handleSignOut}
               className="flex items-center text-sm text-gray-600 hover:text-gray-900"

@@ -58,7 +58,7 @@ export default function HomePage() {
               </Link>
             </div>
             <p className="text-purple-200 mt-4 text-sm">
-              ✅ Sin tarjeta de crédito • ✅ Configuración en 5 minutos • ✅ Soporte incluido
+              ✅ Sin tarjeta de crédito • ✅ Configuración en 5 minutos • ✅ Luego $150 por usuario/mes
             </p>
           </div>
         </div>
@@ -175,6 +175,82 @@ export default function HomePage() {
               <div className="text-5xl font-bold text-green-600 mb-2">60%</div>
               <p className="text-gray-600">Reducción en tiempo administrativo</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Precios simples y transparentes
+            </h2>
+            <p className="text-xl text-gray-600">
+              Sin costos ocultos, sin permanencia. Cancela cuando quieras.
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-purple-200 p-8 text-center relative">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+                🚀 Más Popular
+              </span>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Plan Completo</h3>
+            
+            <div className="mb-6">
+              <div className="text-center">
+                <span className="text-5xl font-bold text-purple-600">$150</span>
+                <span className="text-gray-600 ml-2">/usuario/mes</span>
+              </div>
+              <p className="text-green-600 font-semibold mt-2">
+                ✨ 30 días gratis para probar
+              </p>
+            </div>
+            
+            <ul className="space-y-3 mb-8 text-left">
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>AI Coach Viral ilimitado</span>
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>Gestión completa de clientes</span>
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>Control de asistencias</span>
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>Gestión de pagos</span>
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>Analytics avanzados</span>
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>Soporte prioritario</span>
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <span>Integración WhatsApp</span>
+              </li>
+            </ul>
+            
+            <Link
+              href="/auth/register"
+              className="w-full bg-purple-600 text-white py-4 px-8 rounded-lg text-lg font-semibold hover:bg-purple-700 transition duration-200 inline-block"
+            >
+              Comenzar Prueba Gratuita
+            </Link>
+            
+            <p className="text-sm text-gray-500 mt-4">
+              Sin tarjeta de crédito requerida • Cancela cuando quieras
+            </p>
           </div>
         </div>
       </section>

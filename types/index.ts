@@ -77,3 +77,69 @@ export interface InscripcionConDetalles extends Inscripcion {
 export interface PlanConClientes extends Plan {
   inscripciones?: Inscripcion[]
 }
+
+// Tipos para reportes de bugs
+export interface BugReport {
+  id: string
+  usuario_id: string
+  gimnasio_id?: string | null
+  tipo: 'bug' | 'recomendacion' | 'mejora'
+  titulo: string
+  descripcion: string
+  pagina_url?: string | null
+  navegador?: string | null
+  estado: 'pendiente' | 'en_revision' | 'solucionado' | 'descartado'
+  prioridad: 'baja' | 'media' | 'alta' | 'critica'
+  created_at: string
+  updated_at: string
+}
+
+export interface BugReportInsert {
+  usuario_id: string
+  gimnasio_id?: string | null
+  tipo: 'bug' | 'recomendacion' | 'mejora'
+  titulo: string
+  descripcion: string
+  pagina_url?: string | null
+  navegador?: string | null
+  estado?: 'pendiente' | 'en_revision' | 'solucionado' | 'descartado'
+  prioridad?: 'baja' | 'media' | 'alta' | 'critica'
+}
+
+// Tipos para suscripciones
+export interface Subscription {
+  id: string
+  usuario_id: string
+  gimnasio_id?: string | null
+  trial_start_date: string
+  trial_end_date: string
+  subscription_start_date?: string | null
+  subscription_end_date?: string | null
+  status: 'trial' | 'active' | 'expired' | 'cancelled' | 'suspended'
+  plan_type: 'monthly' | 'yearly'
+  price_per_user: number
+  max_users: number
+  current_users_count: number
+  last_billing_date?: string | null
+  next_billing_date?: string | null
+  payment_method?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SubscriptionInsert {
+  usuario_id: string
+  gimnasio_id?: string | null
+  trial_start_date?: string
+  trial_end_date?: string
+  subscription_start_date?: string | null
+  subscription_end_date?: string | null
+  status?: 'trial' | 'active' | 'expired' | 'cancelled' | 'suspended'
+  plan_type?: 'monthly' | 'yearly'
+  price_per_user?: number
+  max_users?: number
+  current_users_count?: number
+  last_billing_date?: string | null
+  next_billing_date?: string | null
+  payment_method?: string | null
+}
