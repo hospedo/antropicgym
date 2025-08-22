@@ -21,11 +21,36 @@ export default function NuevoClientePage() {
   const [error, setError] = useState('')
   const router = useRouter()
 
+  const formatDateForDisplay = (dateStr: string): string => {
+    if (!dateStr) return ''
+    const [year, month, day] = dateStr.split('-')
+    return `${day}-${month}-${year}`
+  }
+
+  const formatDateForStorage = (dateStr: string): string => {
+    if (!dateStr) return ''
+    if (dateStr.includes('/')) {
+      const [day, month, year] = dateStr.split('/')
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    }
+    if (dateStr.includes('-') && dateStr.indexOf('-') === 2) {
+      const [day, month, year] = dateStr.split('-')
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    }
+    return dateStr
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
+    let processedValue = value
+    
+    if (name === 'fecha_nacimiento' && value) {
+      processedValue = formatDateForStorage(value)
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : processedValue
     }))
   }
 
@@ -33,6 +58,23 @@ export default function NuevoClientePage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // Validar campos obligatorios
+    if (!formData.nombre?.trim()) {
+      setError('El nombre es obligatorio')
+      setLoading(false)
+      return
+    }
+    if (!formData.email?.trim()) {
+      setError('El email es obligatorio')
+      setLoading(false)
+      return
+    }
+    if (!formData.fecha_nacimiento) {
+      setError('La fecha de nacimiento es obligatoria')
+      setLoading(false)
+      return
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -107,12 +149,13 @@ export default function NuevoClientePage() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
+                Email *
               </label>
               <input
                 type="email"
                 name="email"
                 id="email"
+                required
                 value={formData.email || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -149,12 +192,13 @@ export default function NuevoClientePage() {
 
             <div>
               <label htmlFor="fecha_nacimiento" className="block text-sm font-medium text-gray-700">
-                Fecha de Nacimiento
+                Fecha de Nacimiento *
               </label>
               <input
                 type="date"
                 name="fecha_nacimiento"
                 id="fecha_nacimiento"
+                required
                 value={formData.fecha_nacimiento || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"

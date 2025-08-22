@@ -126,7 +126,11 @@ export default function ClienteDetailPage() {
                   <dt className="text-sm font-medium text-gray-500">Fecha de Nacimiento</dt>
                   <dd className="text-sm text-gray-900">
                     {cliente.fecha_nacimiento 
-                      ? new Date(cliente.fecha_nacimiento).toLocaleDateString()
+                      ? new Date(cliente.fecha_nacimiento).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit', 
+                          year: 'numeric'
+                        })
                       : 'No especificado'
                     }
                   </dd>
