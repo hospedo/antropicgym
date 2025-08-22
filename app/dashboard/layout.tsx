@@ -14,6 +14,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [gimnasioNombre, setGimnasioNombre] = useState<string>('')
   const router = useRouter()
 
   useEffect(() => {
@@ -26,6 +27,18 @@ export default function DashboardLayout({
       }
       
       setUser(session.user)
+      
+      // Cargar nombre del gimnasio
+      const { data: gimnasio } = await supabase
+        .from('gimnasios')
+        .select('nombre')
+        .eq('usuario_id', session.user.id)
+        .single()
+      
+      if (gimnasio) {
+        setGimnasioNombre(gimnasio.nombre)
+      }
+      
       setLoading(false)
     }
 
@@ -87,7 +100,12 @@ export default function DashboardLayout({
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <h1 className="text-xl font-bold text-gray-900">Gym Manager</h1>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">ANTROPIC</h1>
+                {gimnasioNombre && (
+                  <p className="text-sm text-gray-600">{gimnasioNombre}</p>
+                )}
+              </div>
             </div>
             <nav className="mt-5 px-2 space-y-1">
               {navigation.map((item) => (
@@ -119,7 +137,12 @@ export default function DashboardLayout({
         <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4">
-              <h1 className="text-xl font-bold text-gray-900">Gym Manager</h1>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">ANTROPIC</h1>
+                {gimnasioNombre && (
+                  <p className="text-sm text-gray-600">{gimnasioNombre}</p>
+                )}
+              </div>
             </div>
             <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
               {navigation.map((item) => (
