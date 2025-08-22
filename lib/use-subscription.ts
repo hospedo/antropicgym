@@ -41,24 +41,7 @@ export function useSubscription(): SubscriptionStatus {
           return
         }
 
-        // Por ahora, saltamos la consulta de subscriptions ya que la tabla no existe
-        // y proporcionamos acceso básico a todos los usuarios
-        console.log('Providing basic access - subscriptions system not implemented yet')
-        if (mounted) {
-          setStatus({
-            hasAccess: true, // Acceso básico temporal
-            isTrialActive: true,
-            daysRemaining: 30,
-            subscription: null,
-            currentPlan: 'gratuito',
-            loading: false,
-            error: null
-          })
-        }
-        return
-
-        // CÓDIGO COMENTADO TEMPORALMENTE - Descomentar cuando se implemente la tabla subscriptions
-        /*
+        // Obtener suscripción del usuario
         const { data: subscription, error: subscriptionError } = await supabase
           .from('subscriptions')
           .select('*')
@@ -119,7 +102,6 @@ export function useSubscription(): SubscriptionStatus {
             error: null
           })
         }
-        */
 
       } catch (error: any) {
         if (mounted) {
