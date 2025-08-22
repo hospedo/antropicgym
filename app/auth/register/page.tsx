@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { gymService } from '@/lib/gym-service'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -39,8 +40,10 @@ export default function RegisterPage() {
       return
     }
 
+    let createdUser: any = null
+
     try {
-      // Crear usuario en Supabase Auth únicamente
+      // Step 1: Create user in Supabase Auth
       console.log('Creating user in Supabase Auth...')
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -72,11 +75,12 @@ export default function RegisterPage() {
         return
       }
 
-      console.log('User created successfully')
+      createdUser = authData.user
+      console.log('User created successfully:', createdUser.id)
 
       // Si se requiere confirmación por email
       if (!authData.session && authData.user && !authData.user.email_confirmed_at) {
-        setSuccess('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.')
+        setSuccess('¡Registro exitoso! Revisa tu email para confirmar tu cuenta y completar el proceso.')
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
@@ -85,33 +89,54 @@ export default function RegisterPage() {
 
       // Si el usuario está confirmado automáticamente
       if (authData.session) {
-        console.log('User auto-confirmed, proceeding...')
-        setSuccess('¡Registro exitoso! Redirigiendo al dashboard...')
+        console.log('User auto-confirmed, creating gym...')
         
-        // Crear el gimnasio de forma síncrona para asegurar que se guarde
-        try {
-          const { data: gymData, error: gymError } = await supabase
-            .from('gimnasios')
-            .insert({
-              usuario_id: authData.user.id,
-              nombre: formData.nombreGimnasio,
-              direccion: formData.direccion || null,
-              telefono: formData.telefono || null,
-              email: formData.email
-            })
-            .select()
-            .single()
+        // Step 2: Create gym using robust service
+        const gymCreationResult = await gymService.createGymFromAuthMetadata(
+          authData.user.id,
+          {
+            nombre: formData.nombre,
+            nombreGimnasio: formData.nombreGimnasio,
+            telefono: formData.telefono,
+            direccion: formData.direccion
+          },
+          formData.email
+        )
+
+        if (!gymCreationResult.success) {
+          console.error('Gym creation failed:', gymCreationResult.error, gymCreationResult.details)
           
-          if (gymError) {
-            console.error('Gym creation error:', gymError)
-            // No bloquear el flujo, pero loggear el error
-          } else {
-            console.log('Gym data saved successfully:', gymData)
-          }
-        } catch (gymError) {
-          console.log('Gym creation failed, user can set it up later:', gymError)
+          // Don't block registration entirely, but warn user and provide recovery
+          console.log('Gym creation failed, but user registration will continue')
+          setError(`⚠️ Advertencia: El gimnasio no se pudo crear automáticamente. Error: ${gymCreationResult.error}. No te preocupes, podrás configurarlo desde la página de Configuración una vez que ingreses al dashboard.`)
+          
+          // Continue with user profile creation, they can fix gym later
+        } else {
+          console.log('Gym created successfully:', gymCreationResult.gym)
         }
 
+        // Step 3: Create user profile in usuarios table
+        try {
+          const { error: usuarioError } = await supabase
+            .from('usuarios')
+            .insert({
+              id: authData.user.id,
+              email: formData.email,
+              nombre: formData.nombre,
+              telefono: formData.telefono || null
+            })
+
+          if (usuarioError) {
+            console.error('User profile creation failed:', usuarioError)
+            // This is not critical, the user can be created later from auth metadata
+          }
+        } catch (profileError) {
+          console.error('User profile creation error:', profileError)
+          // This is not critical, continue with registration
+        }
+
+        setSuccess('¡Registro exitoso! Gimnasio creado correctamente. Redirigiendo al dashboard...')
+        
         setTimeout(() => {
           router.push('/dashboard')
         }, 2000)

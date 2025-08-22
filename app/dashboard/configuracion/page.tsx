@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Gimnasio, Usuario } from '@/types'
 import { Save, Building, User, Phone, Mail, MapPin, Clock, Settings, UserPlus, Users } from 'lucide-react'
+import { gymService } from '@/lib/gym-service'
+import { ensureUserHasGym } from '@/lib/gym-recovery'
 
 export default function ConfiguracionPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
@@ -13,6 +15,7 @@ export default function ConfiguracionPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('general')
+  const [recovering, setRecovering] = useState(false)
 
   const [formData, setFormData] = useState({
     // Usuario
@@ -58,33 +61,22 @@ export default function ConfiguracionPage() {
           console.error('Error loading gym data:', gymError)
         }
 
-        // Si no hay datos del gimnasio, usar metadata del auth
+        // Si no hay datos del gimnasio, usar el servicio robusto para crearlo
         let finalGymData = gimnasioData
-        if (!gimnasioData && user.user_metadata) {
-          console.log('No gym data found, using auth metadata:', user.user_metadata)
+        if (!gimnasioData) {
+          console.log('No gym data found, attempting to create gym using service...')
           
-          // Intentar crear el gimnasio desde metadata
-          try {
-            const { data: newGym, error: createError } = await supabase
-              .from('gimnasios')
-              .insert({
-                usuario_id: user.id,
-                nombre: user.user_metadata.nombreGimnasio || '',
-                direccion: user.user_metadata.direccion || '',
-                telefono: user.user_metadata.telefono || '',
-                email: user.email || ''
-              })
-              .select()
-              .single()
-            
-            if (!createError) {
-              console.log('Gym created from metadata:', newGym)
-              finalGymData = newGym
-            } else {
-              console.error('Error creating gym from metadata:', createError)
-            }
-          } catch (createError) {
-            console.error('Exception creating gym:', createError)
+          const gymCreationResult = await gymService.ensureUserHasGym(
+            user.id,
+            user.user_metadata,
+            user.email || undefined
+          )
+          
+          if (gymCreationResult.success) {
+            console.log('Gym created/retrieved successfully:', gymCreationResult.gym)
+            finalGymData = gymCreationResult.gym
+          } else {
+            console.error('Failed to create/retrieve gym:', gymCreationResult.error, gymCreationResult.details)
           }
         }
 
@@ -205,6 +197,34 @@ export default function ConfiguracionPage() {
     }
   }
 
+  const handleRecoverGym = async () => {
+    setRecovering(true)
+    setError('')
+    setMessage('')
+
+    try {
+      console.log('Attempting to recover/create gym...')
+      const recoveryResult = await ensureUserHasGym()
+
+      if (recoveryResult.success) {
+        setMessage('✅ Gimnasio recuperado/creado exitosamente')
+        
+        // Reload the page to show the new gym data
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      } else {
+        setError(`Error al recuperar gimnasio: ${recoveryResult.error}`)
+        console.error('Gym recovery failed:', recoveryResult)
+      }
+    } catch (error) {
+      setError('Error inesperado al recuperar gimnasio')
+      console.error('Gym recovery error:', error)
+    } finally {
+      setRecovering(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -267,10 +287,44 @@ export default function ConfiguracionPage() {
 
             {/* Información del Gimnasio */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <Building className="mr-2 h-5 w-5" />
-                Información del Gimnasio
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <Building className="mr-2 h-5 w-5" />
+                  Información del Gimnasio
+                </h3>
+                {!gimnasio && (
+                  <button
+                    onClick={handleRecoverGym}
+                    disabled={recovering}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    {recovering ? 'Recuperando...' : 'Crear Gimnasio'}
+                  </button>
+                )}
+              </div>
+              
+              {!gimnasio && (
+                <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        No se encontró información del gimnasio
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>
+                          No se pudo encontrar la información de tu gimnasio. Esto puede suceder si hubo un problema durante el registro. 
+                          Usa el botón "Crear Gimnasio" para recuperar o crear la información desde tus datos de registro.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div>
