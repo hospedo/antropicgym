@@ -34,32 +34,45 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              Gestiona tu gimnasio con
-              <span className="block text-yellow-300">Inteligencia Artificial</span>
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-purple-100 max-w-3xl mx-auto">
-              La plataforma completa para transformar tu gimnasio en un negocio próspero. 
-              Con AI Coach viral, gestión inteligente y herramientas avanzadas.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/auth/register"
-                className="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-300 transition duration-200 shadow-lg"
-              >
-                Prueba Gratuita - 30 días
-              </Link>
-              <Link
-                href="/auth/login"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-purple-600 transition duration-200"
-              >
-                Ver Demo
-              </Link>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Texto */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                Gestiona tu gimnasio con
+                <span className="block text-yellow-300">Inteligencia Artificial</span>
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 text-purple-100">
+                La plataforma completa para transformar tu gimnasio en un negocio próspero. 
+                Con AI Coach viral, gestión inteligente y herramientas avanzadas.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link
+                  href="/auth/register"
+                  className="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-300 transition duration-200 shadow-lg"
+                >
+                  Prueba Gratuita - 30 días
+                </Link>
+                <Link
+                  href="/auth/login"
+                  className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-purple-600 transition duration-200"
+                >
+                  Ver Demo
+                </Link>
+              </div>
+              <p className="text-purple-200 mt-4 text-sm text-center lg:text-left">
+                ✅ Sin tarjeta de crédito • ✅ Configuración en 5 minutos • ✅ Luego $150 por usuario/mes
+              </p>
             </div>
-            <p className="text-purple-200 mt-4 text-sm">
-              ✅ Sin tarjeta de crédito • ✅ Configuración en 5 minutos • ✅ Luego $150 por usuario/mes
-            </p>
+            
+            {/* Imagen Hero */}
+            <div className="relative">
+              <img 
+                src="/hero-antropic.png" 
+                alt="ANTROPIC - Gestión de Gimnasios con IA" 
+                className="w-full h-auto rounded-2xl shadow-2xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent rounded-2xl"></div>
+            </div>
           </div>
         </div>
       </section>
