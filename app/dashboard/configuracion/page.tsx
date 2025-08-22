@@ -34,33 +34,106 @@ export default function ConfiguracionPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
+        console.log('Loading configuration data for user:', user.id)
+
         // Cargar datos del usuario
-        const { data: usuarioData } = await supabase
+        const { data: usuarioData, error: userError } = await supabase
           .from('usuarios')
           .select('*')
           .eq('id', user.id)
           .single()
 
+        if (userError && userError.code !== 'PGRST116') {
+          console.error('Error loading user data:', userError)
+        }
+
         // Cargar datos del gimnasio
-        const { data: gimnasioData } = await supabase
+        const { data: gimnasioData, error: gymError } = await supabase
           .from('gimnasios')
           .select('*')
           .eq('usuario_id', user.id)
           .single()
 
-        setUsuario(usuarioData)
-        setGimnasio(gimnasioData)
+        if (gymError && gymError.code !== 'PGRST116') {
+          console.error('Error loading gym data:', gymError)
+        }
 
-        // Llenar formulario
+        // Si no hay datos del gimnasio, usar metadata del auth
+        let finalGymData = gimnasioData
+        if (!gimnasioData && user.user_metadata) {
+          console.log('No gym data found, using auth metadata:', user.user_metadata)
+          
+          // Intentar crear el gimnasio desde metadata
+          try {
+            const { data: newGym, error: createError } = await supabase
+              .from('gimnasios')
+              .insert({
+                usuario_id: user.id,
+                nombre: user.user_metadata.nombreGimnasio || '',
+                direccion: user.user_metadata.direccion || '',
+                telefono: user.user_metadata.telefono || '',
+                email: user.email || ''
+              })
+              .select()
+              .single()
+            
+            if (!createError) {
+              console.log('Gym created from metadata:', newGym)
+              finalGymData = newGym
+            } else {
+              console.error('Error creating gym from metadata:', createError)
+            }
+          } catch (createError) {
+            console.error('Exception creating gym:', createError)
+          }
+        }
+
+        // Si aún no hay datos del usuario, usar metadata
+        let finalUserData = usuarioData
+        if (!usuarioData && user.user_metadata) {
+          console.log('No user data found, using auth metadata for user data')
+          
+          try {
+            const { data: newUser, error: createUserError } = await supabase
+              .from('usuarios')
+              .insert({
+                id: user.id,
+                email: user.email || '',
+                nombre: user.user_metadata.nombre || '',
+                telefono: user.user_metadata.telefono || ''
+              })
+              .select()
+              .single()
+            
+            if (!createUserError) {
+              console.log('User created from metadata:', newUser)
+              finalUserData = newUser
+            } else {
+              console.error('Error creating user from metadata:', createUserError)
+            }
+          } catch (createUserError) {
+            console.error('Exception creating user:', createUserError)
+          }
+        }
+
+        setUsuario(finalUserData)
+        setGimnasio(finalGymData)
+
+        // Llenar formulario con datos disponibles o metadata como fallback
         setFormData({
-          nombre: usuarioData?.nombre || '',
-          telefono: usuarioData?.telefono || '',
-          nombreGimnasio: gimnasioData?.nombre || '',
-          direccion: gimnasioData?.direccion || '',
-          telefonoGimnasio: gimnasioData?.telefono || '',
-          emailGimnasio: gimnasioData?.email || user.email || '',
-          horario_apertura: gimnasioData?.horario_apertura || '06:00',
-          horario_cierre: gimnasioData?.horario_cierre || '22:00'
+          nombre: finalUserData?.nombre || user.user_metadata?.nombre || '',
+          telefono: finalUserData?.telefono || user.user_metadata?.telefono || '',
+          nombreGimnasio: finalGymData?.nombre || user.user_metadata?.nombreGimnasio || '',
+          direccion: finalGymData?.direccion || user.user_metadata?.direccion || '',
+          telefonoGimnasio: finalGymData?.telefono || user.user_metadata?.telefono || '',
+          emailGimnasio: finalGymData?.email || user.email || '',
+          horario_apertura: finalGymData?.horario_apertura || '06:00',
+          horario_cierre: finalGymData?.horario_cierre || '22:00'
+        })
+
+        console.log('Configuration loaded successfully:', {
+          usuario: finalUserData,
+          gimnasio: finalGymData
         })
 
       } catch (error) {
