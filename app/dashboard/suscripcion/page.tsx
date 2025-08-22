@@ -257,23 +257,26 @@ export default function SuscripcionPage() {
               ✅ Plan Actual
             </button>
           ) : (
-            <button
-              onClick={handleUpgrade}
-              disabled={processing}
-              className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-            >
-              {processing ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <Crown className="h-5 w-5 mr-2" />
-                  Upgrade a Básico
-                </>
-              )}
-            </button>
+            <div className="space-y-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-orange-600 mr-2" />
+                  <div>
+                    <p className="text-sm font-medium text-orange-800">Próximamente disponible</p>
+                    <p className="text-xs text-orange-600">
+                      Estamos configurando MercadoPago para procesar pagos seguros
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <button
+                disabled
+                className="w-full bg-gray-300 text-gray-500 py-3 px-6 rounded-lg font-semibold cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                <Crown className="h-5 w-5 mr-2" />
+                Upgrade Temporalmente Deshabilitado
+              </button>
+            </div>
           )}
         </div>
       </div>
