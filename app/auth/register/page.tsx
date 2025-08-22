@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { createInitialSubscription } from '@/lib/use-subscription'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -49,36 +50,59 @@ export default function RegisterPage() {
       }
 
       if (authData.user) {
-        const { error: userError } = await supabase
-          .from('usuarios')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            nombre: formData.nombre,
-            telefono: formData.telefono
-          })
+        try {
+          // 1. Crear usuario en tabla usuarios
+          const { error: userError } = await supabase
+            .from('usuarios')
+            .insert({
+              id: authData.user.id,
+              email: formData.email,
+              nombre: formData.nombre,
+              telefono: formData.telefono
+            })
 
-        if (userError) {
-          setError('Error al crear el usuario')
-          return
+          if (userError) {
+            console.error('Error creating user:', userError)
+            setError(`Error al crear el usuario: ${userError.message}`)
+            return
+          }
+
+          // 2. Crear gimnasio
+          const { data: gymData, error: gymError } = await supabase
+            .from('gimnasios')
+            .insert({
+              usuario_id: authData.user.id,
+              nombre: formData.nombreGimnasio,
+              direccion: formData.direccion,
+              telefono: formData.telefono,
+              email: formData.email
+            })
+            .select()
+            .single()
+
+          if (gymError) {
+            console.error('Error creating gym:', gymError)
+            setError(`Error al crear el gimnasio: ${gymError.message}`)
+            return
+          }
+
+          // 3. Crear suscripción inicial (manualmente, no dependiendo del trigger)
+          try {
+            const subscriptionResult = await createInitialSubscription(authData.user.id, gymData?.id)
+            if (!subscriptionResult.success) {
+              console.warn('Warning: Could not create initial subscription:', subscriptionResult.error)
+              // No bloquear el registro por esto, la suscripción se puede crear después
+            }
+          } catch (subscriptionError) {
+            console.warn('Warning: Subscription creation failed:', subscriptionError)
+            // Continuar sin bloquear
+          }
+
+          router.push('/dashboard')
+        } catch (generalError) {
+          console.error('General error during registration:', generalError)
+          setError('Error inesperado durante el registro. Intenta nuevamente.')
         }
-
-        const { error: gymError } = await supabase
-          .from('gimnasios')
-          .insert({
-            usuario_id: authData.user.id,
-            nombre: formData.nombreGimnasio,
-            direccion: formData.direccion,
-            telefono: formData.telefono,
-            email: formData.email
-          })
-
-        if (gymError) {
-          setError('Error al crear el gimnasio')
-          return
-        }
-
-        router.push('/dashboard')
       }
     } catch (err) {
       setError('Error inesperado. Intenta nuevamente.')

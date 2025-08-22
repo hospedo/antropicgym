@@ -49,6 +49,23 @@ export function useSubscription(): SubscriptionStatus {
           .single()
 
         if (subscriptionError) {
+          // Si la tabla no existe o no hay suscripción, crear acceso básico temporal
+          if (subscriptionError.code === 'PGRST116' || subscriptionError.message.includes('relation') || subscriptionError.message.includes('does not exist')) {
+            console.warn('Subscriptions table not found, providing basic access')
+            if (mounted) {
+              setStatus({
+                hasAccess: true, // Acceso básico temporal
+                isTrialActive: true,
+                daysRemaining: 30,
+                subscription: null,
+                currentPlan: 'gratuito',
+                loading: false,
+                error: null
+              })
+            }
+            return
+          }
+          
           if (mounted) {
             setStatus(prev => ({
               ...prev,
