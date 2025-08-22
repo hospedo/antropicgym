@@ -6,6 +6,7 @@ export interface ClienteDestacado {
   id: string
   nombre: string
   apellido: string
+  telefono?: string
   tipo_logro: 'constancia' | 'racha' | 'regreso' | 'nuevo' | 'meta'
   dias_consecutivos?: number
   total_asistencias?: number
@@ -35,6 +36,7 @@ export async function detectarClientesDestacados(gimnasioId: string): Promise<Cl
       id,
       nombre,
       apellido,
+      telefono,
       usuario_id,
       created_at,
       gimnasios (
@@ -105,6 +107,7 @@ export async function detectarClientesDestacados(gimnasioId: string): Promise<Cl
         id: cliente.id,
         nombre: cliente.nombre,
         apellido: cliente.apellido,
+        telefono: cliente.telefono,
         tipo_logro: tipoLogro,
         dias_consecutivos: diasConsecutivos,
         total_asistencias: totalAsistenciasMes,
@@ -244,6 +247,12 @@ export function generarContenidoPositivo(cliente: ClienteDestacado) {
     titulo: contenido.titulos[tituloIndex],
     descripcion: contenido.descripciones[tituloIndex],
     personalidad: 'Coach Motivador',
+    cliente: {
+      id: cliente.id,
+      nombre: cliente.nombre,
+      apellido: cliente.apellido,
+      telefono: cliente.telefono
+    },
     cliente_nombre: `${cliente.nombre} ${cliente.apellido}`,
     tipo_logro: cliente.tipo_logro,
     hashtags: ['#AICoach', '#GymMotivation', '#Success', ...contenido.hashtags],

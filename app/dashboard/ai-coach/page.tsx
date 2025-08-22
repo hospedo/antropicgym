@@ -357,7 +357,7 @@ export default function AICoachDashboard() {
                               hashtags: contenido.hashtags,
                               texto_final: contenido.texto_final,
                               tipo: contenido.tipo
-                            }))}
+                            }), contenido.cliente?.telefono)}
                             className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                           >
                             <MessageCircle className="h-4 w-4" />
@@ -453,7 +453,7 @@ export default function AICoachDashboard() {
                             hashtags: contenido.hashtags,
                             texto_final: `${contenido.descripcion}\n\n${contenido.hashtags?.join(' ')}`,
                             tipo: contenido.tipo_logro || 'celebracion'
-                          }))}
+                          }), contenido.cliente?.telefono)}
                           className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                         >
                           <MessageCircle className="h-4 w-4" />

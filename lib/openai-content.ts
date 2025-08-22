@@ -175,6 +175,12 @@ export async function crearContenidoCompleto(cliente: ClienteAusencia) {
   
   return {
     ...contenido,
+    cliente: {
+      id: cliente.id,
+      nombre: cliente.nombre,
+      apellido: cliente.apellido,
+      telefono: cliente.telefono
+    },
     imagen_url: imagenUrl,
     listo_para_publicar: true,
     texto_final: `${contenido.descripcion}\n\n${contenido.hashtags.join(' ')}`

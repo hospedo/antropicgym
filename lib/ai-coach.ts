@@ -6,6 +6,7 @@ export interface ClienteAusencia {
   id: string
   nombre: string
   apellido: string
+  telefono?: string
   dias_sin_venir: number
   ultima_asistencia: string | null
   gimnasio: {
@@ -45,6 +46,7 @@ export async function detectarClientesAusentes(gimnasioId: string): Promise<Clie
       id,
       nombre,
       apellido,
+      telefono,
       documento,
       usuario_id,
       activo,
@@ -129,6 +131,7 @@ export async function detectarClientesAusentes(gimnasioId: string): Promise<Clie
         id: cliente.id,
         nombre: cliente.nombre,
         apellido: cliente.apellido,
+        telefono: cliente.telefono,
         dias_sin_venir: diasSinVenir,
         ultima_asistencia: ultimaFecha,
         gimnasio: cliente.gimnasios?.[0] || { nombre: 'Sin gimnasio' },
