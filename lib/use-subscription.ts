@@ -1,25 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
-
-interface Subscription {
-  id: string
-  usuario_id: string
-  gimnasio_id?: string | null
-  trial_start_date: string
-  trial_end_date: string
-  subscription_start_date?: string | null
-  subscription_end_date?: string | null
-  status: 'trial' | 'active' | 'expired' | 'cancelled' | 'suspended'
-  plan_type: 'monthly' | 'yearly'
-  price_per_user: number
-  max_users: number
-  current_users_count: number
-  last_billing_date?: string | null
-  next_billing_date?: string | null
-  payment_method?: string | null
-  created_at: string
-  updated_at: string
-}
+import { Subscription } from '@/types'
 
 interface SubscriptionStatus {
   hasAccess: boolean
