@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { createInitialSubscription } from '@/lib/use-subscription'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +17,7 @@ export default function RegisterPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +31,7 @@ export default function RegisterPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden')
@@ -39,15 +40,30 @@ export default function RegisterPage() {
     }
 
     try {
-      // Paso 1: Crear usuario en Supabase Auth
+      // Crear usuario en Supabase Auth únicamente
+      console.log('Creating user in Supabase Auth...')
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            nombre: formData.nombre,
+            telefono: formData.telefono,
+            nombreGimnasio: formData.nombreGimnasio,
+            direccion: formData.direccion
+          }
+        }
       })
 
       if (authError) {
-        console.error('Auth error:', authError)
-        setError(`Error de autenticación: ${authError.message}`)
+        console.error('Auth signup error:', authError)
+        if (authError.message.includes('Email rate limit exceeded')) {
+          setError('Demasiados intentos. Espera unos minutos antes de intentar nuevamente.')
+        } else if (authError.message.includes('already registered')) {
+          setError('Este email ya está registrado. Intenta iniciar sesión.')
+        } else {
+          setError(`Error: ${authError.message}`)
+        }
         return
       }
 
@@ -56,76 +72,48 @@ export default function RegisterPage() {
         return
       }
 
-      console.log('User created successfully:', authData.user.id)
+      console.log('User created successfully')
 
-      // Paso 2: Crear entrada en tabla usuarios (con manejo de errores mejorado)
-      try {
-        const { error: userError } = await supabase
-          .from('usuarios')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            nombre: formData.nombre,
-            telefono: formData.telefono || null
-          })
+      // Si se requiere confirmación por email
+      if (!authData.session && authData.user && !authData.user.email_confirmed_at) {
+        setSuccess('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.')
+        setTimeout(() => {
+          router.push('/auth/login')
+        }, 3000)
+        return
+      }
 
-        if (userError) {
-          console.error('Error inserting user:', userError)
-          // Si es error de usuario ya existente, continúa
-          if (userError.code !== '23505') { // 23505 es duplicate key
-            setError(`Error al crear perfil de usuario: ${userError.message}`)
-            return
+      // Si el usuario está confirmado automáticamente
+      if (authData.session) {
+        console.log('User auto-confirmed, proceeding...')
+        setSuccess('¡Registro exitoso! Redirigiendo al dashboard...')
+        
+        // Intentar crear el gimnasio de forma no bloqueante
+        setTimeout(async () => {
+          try {
+            await supabase
+              .from('gimnasios')
+              .insert({
+                usuario_id: authData.user.id,
+                nombre: formData.nombreGimnasio,
+                direccion: formData.direccion || null,
+                telefono: formData.telefono || null,
+                email: formData.email
+              })
+            console.log('Gym data saved successfully')
+          } catch (gymError) {
+            console.log('Gym creation failed, but user can set it up later:', gymError)
           }
-        }
-        console.log('User profile created successfully')
-      } catch (userInsertError) {
-        console.error('Exception inserting user:', userInsertError)
-        setError('Error al crear el perfil de usuario')
-        return
+        }, 500)
+
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
       }
-
-      // Paso 3: Crear gimnasio (con manejo de errores mejorado)
-      try {
-        const { data: gymData, error: gymError } = await supabase
-          .from('gimnasios')
-          .insert({
-            usuario_id: authData.user.id,
-            nombre: formData.nombreGimnasio,
-            direccion: formData.direccion || null,
-            telefono: formData.telefono || null,
-            email: formData.email
-          })
-          .select()
-          .single()
-
-        if (gymError) {
-          console.error('Error creating gym:', gymError)
-          setError(`Error al crear el gimnasio: ${gymError.message}`)
-          return
-        }
-        console.log('Gym created successfully:', gymData)
-      } catch (gymInsertError) {
-        console.error('Exception inserting gym:', gymInsertError)
-        setError('Error al crear el gimnasio')
-        return
-      }
-
-      // Paso 4: Intentar crear suscripción (sin bloquear el proceso)
-      try {
-        await createInitialSubscription(authData.user.id)
-        console.log('Subscription created successfully')
-      } catch (subscriptionError) {
-        console.warn('Subscription creation failed, but continuing:', subscriptionError)
-        // No bloquear el registro por esto
-      }
-
-      // Éxito: redirigir al dashboard
-      console.log('Registration completed successfully')
-      router.push('/dashboard')
 
     } catch (err: any) {
-      console.error('Unexpected registration error:', err)
-      setError(`Error inesperado: ${err.message || 'Intenta nuevamente'}`)
+      console.error('Registration error:', err)
+      setError('Error inesperado durante el registro. Intenta nuevamente.')
     } finally {
       setLoading(false)
     }
@@ -135,7 +123,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Registrar Gimnasio</h1>
+          <h1 className="text-2xl font-bold text-gray-900">ANTROPIC</h1>
           <p className="text-gray-600">Crea tu cuenta y configura tu gimnasio</p>
         </div>
 
@@ -251,7 +239,11 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm">{error}</div>
+            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">{error}</div>
+          )}
+
+          {success && (
+            <div className="text-green-600 text-sm bg-green-50 p-3 rounded-md">{success}</div>
           )}
 
           <button

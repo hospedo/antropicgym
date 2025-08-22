@@ -42,6 +42,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
         <div className="text-center mb-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wide">Antropic</h2>
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
           <p className="text-gray-600">Accede a tu panel de gimnasio</p>
         </div>
