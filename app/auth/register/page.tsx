@@ -88,23 +88,29 @@ export default function RegisterPage() {
         console.log('User auto-confirmed, proceeding...')
         setSuccess('¡Registro exitoso! Redirigiendo al dashboard...')
         
-        // Intentar crear el gimnasio de forma no bloqueante
-        setTimeout(async () => {
-          try {
-            await supabase
-              .from('gimnasios')
-              .insert({
-                usuario_id: authData.user.id,
-                nombre: formData.nombreGimnasio,
-                direccion: formData.direccion || null,
-                telefono: formData.telefono || null,
-                email: formData.email
-              })
-            console.log('Gym data saved successfully')
-          } catch (gymError) {
-            console.log('Gym creation failed, but user can set it up later:', gymError)
+        // Crear el gimnasio de forma síncrona para asegurar que se guarde
+        try {
+          const { data: gymData, error: gymError } = await supabase
+            .from('gimnasios')
+            .insert({
+              usuario_id: authData.user.id,
+              nombre: formData.nombreGimnasio,
+              direccion: formData.direccion || null,
+              telefono: formData.telefono || null,
+              email: formData.email
+            })
+            .select()
+            .single()
+          
+          if (gymError) {
+            console.error('Gym creation error:', gymError)
+            // No bloquear el flujo, pero loggear el error
+          } else {
+            console.log('Gym data saved successfully:', gymData)
           }
-        }, 500)
+        } catch (gymError) {
+          console.log('Gym creation failed, user can set it up later:', gymError)
+        }
 
         setTimeout(() => {
           router.push('/dashboard')
