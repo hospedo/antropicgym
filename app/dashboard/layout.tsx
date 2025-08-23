@@ -102,7 +102,7 @@ export default function DashboardLayout({
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">ANTROPIC</h1>
+                <h1 className="text-xl font-bold text-red-600">De0a100</h1>
                 {gimnasioNombre && (
                   <p className="text-sm text-gray-600">{gimnasioNombre}</p>
                 )}
@@ -140,7 +140,7 @@ export default function DashboardLayout({
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">ANTROPIC</h1>
+                <h1 className="text-xl font-bold text-red-600">De0a100</h1>
                 {gimnasioNombre && (
                   <p className="text-sm text-gray-600">{gimnasioNombre}</p>
                 )}
