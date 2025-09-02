@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { ClienteInsert } from '@/types'
+import { ClienteInsert, Plan } from '@/types'
 
 export default function NuevoClientePage() {
   const [formData, setFormData] = useState<Partial<ClienteInsert>>({
@@ -14,10 +14,41 @@ export default function NuevoClientePage() {
     documento: '',
     activo: true
   })
+  const [selectedPlan, setSelectedPlan] = useState<string>('')
+  const [planes, setPlanes] = useState<Plan[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
+  useEffect(() => {
+    const loadPlanes = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: gimnasio } = await supabase
+          .from('gimnasios')
+          .select('id')
+          .eq('usuario_id', user.id)
+          .single()
+
+        if (!gimnasio) return
+
+        const { data: planesData } = await supabase
+          .from('planes')
+          .select('*')
+          .eq('gimnasio_id', gimnasio.id)
+          .eq('activo', true)
+          .order('nombre')
+
+        setPlanes(planesData || [])
+      } catch (error) {
+        console.error('Error loading plans:', error)
+      }
+    }
+
+    loadPlanes()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -88,14 +119,42 @@ export default function NuevoClientePage() {
 
       if (!gimnasio) throw new Error('Gimnasio no encontrado')
 
-      const { error: insertError } = await supabase
+      const { data: clienteData, error: insertError } = await supabase
         .from('clientes')
         .insert({
           ...formData,
           gimnasio_id: gimnasio.id
         } as ClienteInsert)
+        .select()
+        .single()
 
       if (insertError) throw insertError
+
+      // Si se seleccionó un plan, crear la inscripción
+      if (selectedPlan && clienteData) {
+        const planSeleccionado = planes.find(p => p.id === selectedPlan)
+        if (planSeleccionado) {
+          const fechaInicio = new Date()
+          const fechaVencimiento = new Date()
+          fechaVencimiento.setDate(fechaInicio.getDate() + planSeleccionado.duracion_dias)
+
+          const { error: inscripcionError } = await supabase
+            .from('inscripciones')
+            .insert({
+              cliente_id: clienteData.id,
+              plan_id: selectedPlan,
+              gimnasio_id: gimnasio.id,
+              fecha_inicio: fechaInicio.toISOString(),
+              fecha_vencimiento: fechaVencimiento.toISOString(),
+              estado: 'activa' as const,
+              precio: planSeleccionado.precio
+            })
+
+          if (inscripcionError) {
+            console.error('Error creating subscription:', inscripcionError)
+          }
+        }
+      }
 
       router.push('/dashboard/clientes')
     } catch (err: any) {
@@ -192,6 +251,29 @@ export default function NuevoClientePage() {
             />
             <p className="mt-1 text-xs text-amber-600">
               ⚠️ Sin email no recibirás promociones ni notificaciones futuras
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="plan" className="block text-sm font-medium text-gray-700">
+              Plan (opcional)
+            </label>
+            <select
+              name="plan"
+              id="plan"
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value)}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Sin plan</option>
+              {planes.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.nombre} - ${plan.precio} ({plan.duracion_dias} días)
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Si seleccionas un plan, se creará automáticamente una inscripción activa para el cliente
             </p>
           </div>
 

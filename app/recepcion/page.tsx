@@ -206,15 +206,15 @@ export default function RecepcionConsultas() {
               onChange={(e) => setBusqueda(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Buscar por documento, nombre o teléfono..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-4 border border-gray-300 rounded-lg text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <button
             onClick={buscarCliente}
             disabled={loading}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+            className="px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 text-lg font-semibold"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-6 w-6" />
             <span>{loading ? 'Buscando...' : 'Buscar'}</span>
           </button>
         </div>
@@ -231,19 +231,19 @@ export default function RecepcionConsultas() {
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <User className="h-6 w-6 mr-2" />
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <User className="h-7 w-7 mr-2" />
                 {clienteInfo.nombre} {clienteInfo.apellido}
               </h2>
               <div className="flex items-center space-x-2">
                 {clienteInfo.activo ? (
-                  <span className="flex items-center text-green-600">
-                    <CheckCircle className="h-5 w-5 mr-1" />
+                  <span className="flex items-center text-green-600 text-lg font-bold">
+                    <CheckCircle className="h-6 w-6 mr-1" />
                     Activo
                   </span>
                 ) : (
-                  <span className="flex items-center text-red-600">
-                    <XCircle className="h-5 w-5 mr-1" />
+                  <span className="flex items-center text-red-600 text-lg font-bold">
+                    <XCircle className="h-6 w-6 mr-1" />
                     Inactivo
                   </span>
                 )}
@@ -254,17 +254,17 @@ export default function RecepcionConsultas() {
           <div className="p-6 space-y-6">
             {/* Datos básicos */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Documento</p>
-                <p className="text-lg font-semibold text-gray-900">{clienteInfo.documento}</p>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm font-medium text-blue-800">Documento</p>
+                <p className="text-2xl font-bold text-blue-900">{clienteInfo.documento}</p>
               </div>
-              <div>
+              <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm font-medium text-gray-600">Teléfono</p>
                 <p className="text-lg font-semibold text-gray-900">{clienteInfo.telefono || 'No registrado'}</p>
               </div>
-              <div>
+              <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm font-medium text-gray-600">Email</p>
-                <p className="text-lg font-semibold text-gray-900">{clienteInfo.email || 'No registrado'}</p>
+                <p className="text-sm font-semibold text-gray-900 break-all">{clienteInfo.email || 'No registrado'}</p>
               </div>
             </div>
 

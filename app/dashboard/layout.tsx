@@ -72,7 +72,7 @@ export default function DashboardLayout({
   }
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Dumbbell },
+    { name: 'Tablero General', href: '/dashboard', icon: Dumbbell },
     { name: '👤 Agregar Clientes', href: '/dashboard/clientes', icon: Users, important: true },
     { name: '🔐 Control de Acceso', href: '/dashboard/consultas', icon: Monitor, important: true },
     { name: 'Planes', href: '/dashboard/planes', icon: CreditCard },

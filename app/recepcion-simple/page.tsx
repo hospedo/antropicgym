@@ -182,7 +182,7 @@ export default function RecepcionSimple() {
                   onChange={(e) => setBusqueda(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="NÚMERO DE DOCUMENTO"
-                  className="w-full px-20 py-20 border-8 border-gray-400 rounded-3xl text-9xl text-center focus:outline-none focus:ring-8 focus:ring-blue-500 focus:border-blue-500 font-black shadow-2xl"
+                  className="w-full px-16 py-16 border-8 border-gray-400 rounded-3xl text-8xl text-center focus:outline-none focus:ring-8 focus:ring-blue-500 focus:border-blue-500 font-black shadow-2xl"
                   autoFocus
                 />
               </div>
