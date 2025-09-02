@@ -66,11 +66,25 @@ export default function ConsultasPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: gimnasio } = await supabase
+      // Intentar obtener gimnasio directamente
+      let { data: gimnasio, error: gimnasioError } = await supabase
         .from('gimnasios')
         .select('id')
         .eq('usuario_id', user.id)
         .single()
+
+      // Si el error es 406, intentar una consulta alternativa
+      if (gimnasioError && gimnasioError.code === 'PGRST116') {
+        // Intentar sin filtro y obtener todos los gimnasios
+        const { data: gimnasios, error: allGymError } = await supabase
+          .from('gimnasios')
+          .select('id, usuario_id')
+        
+        if (!allGymError && gimnasios) {
+          // Filtrar manualmente por usuario_id
+          gimnasio = gimnasios.find(g => g.usuario_id === user.id)
+        }
+      }
 
       if (!gimnasio) return
 
@@ -310,12 +324,32 @@ export default function ConsultasPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No autorizado')
 
-      // Obtener gimnasio del usuario
-      const { data: gimnasio } = await supabase
+      // Intentar obtener gimnasio directamente
+      let { data: gimnasio, error: gimnasioError } = await supabase
         .from('gimnasios')
         .select('id')
         .eq('usuario_id', user.id)
         .single()
+
+      // Si el error es 406, intentar una consulta alternativa
+      if (gimnasioError && gimnasioError.code === 'PGRST116') {
+        // Intentar sin filtro y obtener todos los gimnasios
+        const { data: gimnasios, error: allGymError } = await supabase
+          .from('gimnasios')
+          .select('id, usuario_id')
+        
+        if (!allGymError && gimnasios) {
+          // Filtrar manualmente por usuario_id
+          gimnasio = gimnasios.find(g => g.usuario_id === user.id)
+          gimnasioError = null
+        } else {
+          throw new Error(`Error consultando gimnasios: ${allGymError?.message || 'Error desconocido'}`)
+        }
+      }
+
+      if (gimnasioError && gimnasioError.code !== 'PGRST116') {
+        throw new Error(`Error obteniendo gimnasio: ${gimnasioError.message}`)
+      }
 
       if (!gimnasio) throw new Error('Gimnasio no encontrado')
 

@@ -37,48 +37,101 @@ export default function ConfigurarRecepcionistas() {
 
   useEffect(() => {
     const obtenerGimnasio = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setError('Usuario no autenticado')
+          return
+        }
 
-      const { data: gimnasio } = await supabase
-        .from('gimnasios')
-        .select(`
-          id, 
-          nombre,
-          recepcionista_1_nombre,
-          recepcionista_1_password,
-          recepcionista_2_nombre,
-          recepcionista_2_password,
-          recepcionista_3_nombre,
-          recepcionista_3_password,
-          recepcionista_4_nombre,
-          recepcionista_4_password
-        `)
-        .eq('usuario_id', user.id)
-        .single()
+        // Primero verificar la estructura de la tabla
+        const { data: columns } = await supabase
+          .from('gimnasios')
+          .select('*')
+          .limit(1)
 
-      if (gimnasio) {
-        setGimnasioInfo(gimnasio)
-        
-        // Cargar datos existentes
-        setRecepcionistas([
-          { 
-            nombre: gimnasio.recepcionista_1_nombre || '', 
-            password: gimnasio.recepcionista_1_password || '' 
-          },
-          { 
-            nombre: gimnasio.recepcionista_2_nombre || '', 
-            password: gimnasio.recepcionista_2_password || '' 
-          },
-          { 
-            nombre: gimnasio.recepcionista_3_nombre || '', 
-            password: gimnasio.recepcionista_3_password || '' 
-          },
-          { 
-            nombre: gimnasio.recepcionista_4_nombre || '', 
-            password: gimnasio.recepcionista_4_password || '' 
+        console.log('Estructura de tabla gimnasios:', columns)
+
+        // Intentar obtener gimnasio directamente
+        let { data: gimnasio, error: gimnasioError } = await supabase
+          .from('gimnasios')
+          .select(`
+            id, 
+            nombre,
+            recepcionista_1_nombre,
+            recepcionista_1_password,
+            recepcionista_2_nombre,
+            recepcionista_2_password,
+            recepcionista_3_nombre,
+            recepcionista_3_password,
+            recepcionista_4_nombre,
+            recepcionista_4_password
+          `)
+          .eq('usuario_id', user.id)
+          .single()
+
+        // Si el error es 406, intentar una consulta alternativa
+        if (gimnasioError && gimnasioError.code === 'PGRST116') {
+          // Intentar sin filtro y obtener todos los gimnasios
+          const { data: gimnasios, error: allGymError } = await supabase
+            .from('gimnasios')
+            .select(`
+              id, 
+              nombre,
+              usuario_id,
+              recepcionista_1_nombre,
+              recepcionista_1_password,
+              recepcionista_2_nombre,
+              recepcionista_2_password,
+              recepcionista_3_nombre,
+              recepcionista_3_password,
+              recepcionista_4_nombre,
+              recepcionista_4_password
+            `)
+          
+          if (!allGymError && gimnasios) {
+            // Filtrar manualmente por usuario_id
+            gimnasio = gimnasios.find(g => g.usuario_id === user.id)
+            gimnasioError = null
+          } else {
+            setError(`Error consultando gimnasios: ${allGymError?.message || 'Error desconocido'}`)
+            return
           }
-        ])
+        }
+
+        if (gimnasioError && gimnasioError.code !== 'PGRST116') {
+          setError(`Error obteniendo gimnasio: ${gimnasioError.message}`)
+          return
+        }
+
+        if (gimnasio) {
+          setGimnasioInfo(gimnasio)
+          
+          // Cargar datos existentes
+          setRecepcionistas([
+            { 
+              nombre: gimnasio.recepcionista_1_nombre || '', 
+              password: gimnasio.recepcionista_1_password || '' 
+            },
+            { 
+              nombre: gimnasio.recepcionista_2_nombre || '', 
+              password: gimnasio.recepcionista_2_password || '' 
+            },
+            { 
+              nombre: gimnasio.recepcionista_3_nombre || '', 
+              password: gimnasio.recepcionista_3_password || '' 
+            },
+            { 
+              nombre: gimnasio.recepcionista_4_nombre || '', 
+              password: gimnasio.recepcionista_4_password || '' 
+            }
+          ])
+        } else {
+          setError('No se encontró gimnasio asociado al usuario')
+        }
+      } catch (error: any) {
+        setError(`Error inesperado: ${error.message}`)
+        console.error('Error obteniendo gimnasio:', error)
       }
     }
 
@@ -112,7 +165,10 @@ export default function ConfigurarRecepcionistas() {
   }
 
   const guardarRecepcionistas = async () => {
-    if (!gimnasioInfo) return
+    if (!gimnasioInfo) {
+      setError('No hay información del gimnasio')
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -127,13 +183,20 @@ export default function ConfigurarRecepcionistas() {
         updateData[`recepcionista_${num}_password`] = recep.password || null
       })
 
-      const { error } = await supabase
+      console.log('Datos a actualizar:', updateData)
+      console.log('ID del gimnasio:', gimnasioInfo.id)
+
+      const { data, error } = await supabase
         .from('gimnasios')
         .update(updateData)
         .eq('id', gimnasioInfo.id)
+        .select()
+
+      console.log('Resultado de la actualización:', { data, error })
 
       if (error) {
-        setError('Error guardando recepcionistas: ' + error.message)
+        console.error('Error de Supabase:', error)
+        setError('Error guardando recepcionistas: ' + error.message + ' (Código: ' + error.code + ')')
         return
       }
 
@@ -143,6 +206,7 @@ export default function ConfigurarRecepcionistas() {
       setGimnasioInfo(prev => prev ? { ...prev, ...updateData } : null)
 
     } catch (error: any) {
+      console.error('Error inesperado:', error)
       setError('Error inesperado: ' + error.message)
     } finally {
       setLoading(false)
@@ -286,7 +350,13 @@ export default function ConfigurarRecepcionistas() {
         )}
 
         {/* Botón guardar */}
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            onClick={() => window.open('/debug-gimnasio', '_blank')}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
+          >
+            🔍 Debug
+          </button>
           <button
             onClick={guardarRecepcionistas}
             disabled={loading}
@@ -295,6 +365,58 @@ export default function ConfigurarRecepcionistas() {
             <Save className="h-5 w-5" />
             <span>{loading ? 'Guardando...' : 'Guardar Configuración'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* URL de Acceso para Recepcionistas */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="font-semibold text-blue-900 mb-3">🔗 URL de Acceso para Recepcionistas</h3>
+        <div className="bg-white border-2 border-blue-300 rounded-lg p-4 mb-4">
+          <p className="text-sm text-gray-600 mb-2">Comparte esta URL con tus recepcionistas:</p>
+          <div className="flex items-center space-x-2">
+            <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono">
+              {typeof window !== 'undefined' ? `${window.location.origin}/recepcion` : 'http://localhost:3000/recepcion'}
+            </code>
+            <button
+              onClick={() => {
+                const url = typeof window !== 'undefined' ? `${window.location.origin}/recepcion` : 'http://localhost:3000/recepcion'
+                navigator.clipboard.writeText(url)
+                alert('✅ URL copiada al portapapeles')
+              }}
+              className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+        <div className="text-blue-800 text-sm">
+          <p><strong>Importante:</strong> Los recepcionistas deben iniciar sesión con su email y contraseña del sistema.</p>
+        </div>
+      </div>
+
+      {/* URL de Acceso Público (Sin autenticación) */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+        <h3 className="font-semibold text-green-900 mb-3">📱 URL de Acceso Público para Clientes</h3>
+        <div className="bg-white border-2 border-green-300 rounded-lg p-4 mb-4">
+          <p className="text-sm text-gray-600 mb-2">URL para que los clientes ingresen con su DNI (pantalla táctil):</p>
+          <div className="flex items-center space-x-2">
+            <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono">
+              {typeof window !== 'undefined' ? `${window.location.origin}/recepcion-simple` : 'http://localhost:3000/recepcion-simple'}
+            </code>
+            <button
+              onClick={() => {
+                const url = typeof window !== 'undefined' ? `${window.location.origin}/recepcion-simple` : 'http://localhost:3000/recepcion-simple'
+                navigator.clipboard.writeText(url)
+                alert('✅ URL copiada al portapapeles')
+              }}
+              className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+        <div className="text-green-800 text-sm">
+          <p><strong>Recomendado:</strong> Usar en tablet/pantalla táctil en la entrada del gimnasio.</p>
         </div>
       </div>
 

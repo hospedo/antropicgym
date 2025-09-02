@@ -73,13 +73,11 @@ export default function DashboardLayout({
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Dumbbell },
-    { name: 'Clientes', href: '/dashboard/clientes', icon: Users },
+    { name: '👤 Agregar Clientes', href: '/dashboard/clientes', icon: Users, important: true },
+    { name: '🔐 Control de Acceso', href: '/dashboard/consultas', icon: Monitor, important: true },
     { name: 'Planes', href: '/dashboard/planes', icon: CreditCard },
     { name: 'Asistencias', href: '/dashboard/asistencias', icon: Calendar },
     { name: 'Pagos', href: '/dashboard/pagos', icon: DollarSign },
-    { name: '🚀 AI Coach Viral', href: '/dashboard/ai-coach', icon: Bot },
-    { name: 'Control Acceso', href: '/dashboard/consultas', icon: Search },
-    { name: 'Reportar Bug', href: '/dashboard/reportar-bug', icon: Bug },
     { name: 'Suscripción', href: '/dashboard/suscripcion', icon: Crown },
     { name: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
   ]
@@ -113,9 +111,13 @@ export default function DashboardLayout({
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${
+                    item.important 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 border-2 border-blue-700 shadow-lg' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
-                  <item.icon className="mr-4 h-6 w-6" />
+                  <item.icon className={`mr-4 h-6 w-6 ${item.important ? 'text-white' : ''}`} />
                   {item.name}
                 </Link>
               ))}
@@ -151,9 +153,13 @@ export default function DashboardLayout({
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    item.important 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 border-2 border-blue-700 shadow-lg' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
-                  <item.icon className="mr-3 h-5 w-5" />
+                  <item.icon className={`mr-3 h-5 w-5 ${item.important ? 'text-white' : ''}`} />
                   {item.name}
                 </Link>
               ))}

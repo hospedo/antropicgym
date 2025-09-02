@@ -427,70 +427,25 @@ export default function ConfiguracionPage() {
       case 'recepcion':
         return (
           <div className="grid grid-cols-1 gap-6">
-            {/* Configurar Accesos de Recepción */}
+            {/* Configurar Recepcionista */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <UserPlus className="mr-2 h-5 w-5" />
-                Configurar Accesos de Recepción
+                Configurar Recepcionista
               </h3>
               
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Gestiona los accesos y permisos para el personal de recepción.
+                  Configura el acceso para el personal de recepción.
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <a
-                    href="/dashboard/crear-acceso-recepcion"
-                    className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                  >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Crear Acceso de Recepción
-                  </a>
-                  
+                <div className="flex justify-center">
                   <a
                     href="/dashboard/configurar-recepcionistas"
-                    className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-center px-6 py-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg"
                   >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurar Recepcionistas
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Crear Recepcionistas */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <Users className="mr-2 h-5 w-5" />
-                Crear Recepcionistas
-              </h3>
-              
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  Diferentes opciones para crear cuentas de recepcionistas.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <a
-                    href="/dashboard/crear-recepcionista"
-                    className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors"
-                  >
-                    Manual
-                  </a>
-                  
-                  <a
-                    href="/dashboard/crear-recepcionista-automatico"
-                    className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors"
-                  >
-                    Automático
-                  </a>
-                  
-                  <a
-                    href="/dashboard/crear-recepcionista-simple"
-                    className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
-                  >
-                    Simple
+                    <Settings className="mr-3 h-5 w-5" />
+                    Configurar Recepcionista
                   </a>
                 </div>
               </div>

@@ -11,46 +11,20 @@ export default function NuevoClientePage() {
     apellido: '',
     email: '',
     telefono: '',
-    fecha_nacimiento: '',
-    direccion: '',
     documento: '',
-    observaciones: '',
     activo: true
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const formatDateForDisplay = (dateStr: string): string => {
-    if (!dateStr) return ''
-    const [year, month, day] = dateStr.split('-')
-    return `${day}-${month}-${year}`
-  }
-
-  const formatDateForStorage = (dateStr: string): string => {
-    if (!dateStr) return ''
-    if (dateStr.includes('/')) {
-      const [day, month, year] = dateStr.split('/')
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-    }
-    if (dateStr.includes('-') && dateStr.indexOf('-') === 2) {
-      const [day, month, year] = dateStr.split('-')
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-    }
-    return dateStr
-  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
-    let processedValue = value
-    
-    if (name === 'fecha_nacimiento' && value) {
-      processedValue = formatDateForStorage(value)
-    }
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : processedValue
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }))
   }
 
@@ -65,13 +39,18 @@ export default function NuevoClientePage() {
       setLoading(false)
       return
     }
-    if (!formData.email?.trim()) {
-      setError('El email es obligatorio')
+    if (!formData.apellido?.trim()) {
+      setError('El apellido es obligatorio')
       setLoading(false)
       return
     }
-    if (!formData.fecha_nacimiento) {
-      setError('La fecha de nacimiento es obligatoria')
+    if (!formData.documento?.trim()) {
+      setError('El DNI es obligatorio')
+      setLoading(false)
+      return
+    }
+    if (!formData.telefono?.trim()) {
+      setError('El teléfono es obligatorio')
       setLoading(false)
       return
     }
@@ -80,11 +59,32 @@ export default function NuevoClientePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No autorizado')
 
-      const { data: gimnasio } = await supabase
+      // Intentar obtener gimnasio directamente
+      let { data: gimnasio, error: gimnasioError } = await supabase
         .from('gimnasios')
         .select('id')
         .eq('usuario_id', user.id)
         .single()
+
+      // Si el error es 406, intentar una consulta alternativa
+      if (gimnasioError && gimnasioError.code === 'PGRST116') {
+        // Intentar sin filtro y obtener todos los gimnasios
+        const { data: gimnasios, error: allGymError } = await supabase
+          .from('gimnasios')
+          .select('id, usuario_id')
+        
+        if (!allGymError && gimnasios) {
+          // Filtrar manualmente por usuario_id
+          gimnasio = gimnasios.find(g => g.usuario_id === user.id)
+          gimnasioError = null
+        } else {
+          throw new Error(`Error consultando gimnasios: ${allGymError?.message || 'Error desconocido'}`)
+        }
+      }
+
+      if (gimnasioError && gimnasioError.code !== 'PGRST116') {
+        throw new Error(`Error obteniendo gimnasio: ${gimnasioError.message}`)
+      }
 
       if (!gimnasio) throw new Error('Gimnasio no encontrado')
 
@@ -148,42 +148,14 @@ export default function NuevoClientePage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email *
-              </label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                required
-                value={formData.email || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
-                Teléfono
-              </label>
-              <input
-                type="tel"
-                name="telefono"
-                id="telefono"
-                value={formData.telefono || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
               <label htmlFor="documento" className="block text-sm font-medium text-gray-700">
-                Documento
+                DNI *
               </label>
               <input
                 type="text"
                 name="documento"
                 id="documento"
+                required
                 value={formData.documento || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -191,15 +163,15 @@ export default function NuevoClientePage() {
             </div>
 
             <div>
-              <label htmlFor="fecha_nacimiento" className="block text-sm font-medium text-gray-700">
-                Fecha de Nacimiento *
+              <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
+                Teléfono *
               </label>
               <input
-                type="date"
-                name="fecha_nacimiento"
-                id="fecha_nacimiento"
+                type="tel"
+                name="telefono"
+                id="telefono"
                 required
-                value={formData.fecha_nacimiento || ''}
+                value={formData.telefono || ''}
                 onChange={handleChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -207,45 +179,20 @@ export default function NuevoClientePage() {
           </div>
 
           <div>
-            <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">
-              Dirección
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email (opcional)
             </label>
             <input
-              type="text"
-              name="direccion"
-              id="direccion"
-              value={formData.direccion || ''}
+              type="email"
+              name="email"
+              id="email"
+              value={formData.email || ''}
               onChange={handleChange}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
-          </div>
-
-          <div>
-            <label htmlFor="observaciones" className="block text-sm font-medium text-gray-700">
-              Observaciones
-            </label>
-            <textarea
-              name="observaciones"
-              id="observaciones"
-              rows={3}
-              value={formData.observaciones || ''}
-              onChange={handleChange}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="activo"
-              id="activo"
-              checked={formData.activo || false}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="activo" className="ml-2 block text-sm text-gray-900">
-              Cliente activo
-            </label>
+            <p className="mt-1 text-xs text-amber-600">
+              ⚠️ Sin email no recibirás promociones ni notificaciones futuras
+            </p>
           </div>
 
           {error && (

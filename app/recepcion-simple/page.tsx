@@ -36,7 +36,7 @@ export default function RecepcionSimple() {
 
   const buscarCliente = async () => {
     if (!busqueda.trim()) {
-      setError('Ingresa un documento, nombre o teléfono')
+      setError('Ingresa tu número de documento')
       return
     }
 
@@ -45,7 +45,7 @@ export default function RecepcionSimple() {
     setClienteInfo(null)
 
     try {
-      // Buscar por documento, nombre, apellido o teléfono
+      // Buscar solo por documento
       const { data: clientes, error: searchError } = await supabase
         .from('clientes')
         .select(`
@@ -67,7 +67,7 @@ export default function RecepcionSimple() {
             )
           )
         `)
-        .or(`documento.ilike.%${busqueda}%,nombre.ilike.%${busqueda}%,apellido.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`)
+        .eq('documento', busqueda.trim())
 
       if (searchError) {
         setError(searchError.message)
@@ -158,187 +158,125 @@ export default function RecepcionSimple() {
       {/* Header */}
       <header className="bg-blue-600 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-24">
             <div className="flex items-center">
-              <Monitor className="h-8 w-8 text-white mr-3" />
-              <h1 className="text-xl font-bold text-white">
-                Terminal Recepción - {hoy}
+              <Monitor className="h-16 w-16 text-white mr-6" />
+              <h1 className="text-5xl font-black text-white">
+                TERMINAL ACCESO - {hoy}
               </h1>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
-          {/* Advertencia */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Modo Simple - Sin Autenticación</h3>
-            <p className="text-yellow-700 text-sm">
-              Esta versión simple no tiene filtros de gimnasio. Para uso en producción, usa 
-              <a href="/recepcion" className="font-semibold underline ml-1">la versión autenticada</a>.
-            </p>
-          </div>
+      <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16 py-16">
+        <div className="space-y-16">
 
           {/* Búsqueda */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              🔍 Buscar Cliente
-            </h2>
-            
-            <div className="flex space-x-4">
-              <div className="flex-1">
+          <div className="bg-white rounded-3xl shadow-2xl p-20">
+            <div className="space-y-20">
+              <div>
                 <input
                   type="text"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Buscar por documento, nombre o teléfono..."
-                  className="w-full px-6 py-4 border border-gray-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="NÚMERO DE DOCUMENTO"
+                  className="w-full px-20 py-20 border-8 border-gray-400 rounded-3xl text-9xl text-center focus:outline-none focus:ring-8 focus:ring-blue-500 focus:border-blue-500 font-black shadow-2xl"
+                  autoFocus
                 />
               </div>
               <button
                 onClick={buscarCliente}
                 disabled={loading}
-                className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 text-lg font-semibold"
+                className="w-full px-20 py-20 bg-blue-600 text-white rounded-3xl hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-8 text-8xl font-black shadow-2xl transform transition-transform hover:scale-105"
               >
-                <Search className="h-6 w-6" />
-                <span>{loading ? 'Buscando...' : 'Buscar'}</span>
+                <Search className="h-24 w-24" />
+                <span>{loading ? 'BUSCANDO...' : 'CONSULTAR'}</span>
               </button>
             </div>
 
             {error && (
-              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-600 text-lg font-medium">{error}</p>
+              <div className="mt-12 bg-red-50 border-8 border-red-200 rounded-3xl p-12">
+                <p className="text-red-600 text-6xl font-black text-center">{error}</p>
               </div>
             )}
           </div>
 
           {/* Información del Cliente */}
           {clienteInfo && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                    <User className="h-8 w-8 mr-3" />
+            <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+              {/* Mensaje de Bienvenida */}
+              {planActivo && clienteInfo.activo ? (
+                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-20">
+                  <h2 className="text-9xl font-black mb-8">¡BIENVENIDO/A!</h2>
+                  <p className="text-6xl font-black">
                     {clienteInfo.nombre} {clienteInfo.apellido}
-                  </h2>
-                  <div className="flex items-center space-x-4">
-                    {clienteInfo.activo ? (
-                      <span className="flex items-center text-green-600 text-lg font-semibold">
-                        <CheckCircle className="h-6 w-6 mr-2" />
-                        ACTIVO
-                      </span>
-                    ) : (
-                      <span className="flex items-center text-red-600 text-lg font-semibold">
-                        <XCircle className="h-6 w-6 mr-2" />
-                        INACTIVO
-                      </span>
-                    )}
-                  </div>
+                  </p>
+                  <p className="text-4xl mt-4 opacity-90 font-bold">DNI: {clienteInfo.documento}</p>
                 </div>
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* Datos básicos */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm font-medium text-gray-600 mb-1">DOCUMENTO</p>
-                    <p className="text-2xl font-bold text-gray-900">{clienteInfo.documento}</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm font-medium text-gray-600 mb-1">TELÉFONO</p>
-                    <p className="text-2xl font-bold text-gray-900">{clienteInfo.telefono || 'No registrado'}</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm font-medium text-gray-600 mb-1">VISITAS TOTALES</p>
-                    <p className="text-2xl font-bold text-gray-900">{clienteInfo.total_asistencias}</p>
-                  </div>
+              ) : (
+                <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-center py-20">
+                  <h2 className="text-9xl font-black mb-8">⚠️ SIN ACCESO</h2>
+                  <p className="text-6xl font-black">
+                    {clienteInfo.nombre} {clienteInfo.apellido}
+                  </p>
+                  <p className="text-4xl mt-4 opacity-90 font-bold">DNI: {clienteInfo.documento}</p>
+                  <p className="text-3xl mt-6 bg-red-700 bg-opacity-50 py-4 px-8 rounded-3xl inline-block font-bold">
+                    Membresía vencida - Consultar en recepción
+                  </p>
                 </div>
+              )}
 
-                {/* Estado de membresía */}
-                <div className="border-2 border-gray-200 rounded-lg p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <CreditCard className="h-6 w-6 mr-2" />
-                    ESTADO DE MEMBRESÍA
-                  </h3>
-                  
-                  {planActivo ? (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-2xl font-bold text-green-800">{(Array.isArray((planActivo as any)?.planes) ? (planActivo as any)?.planes[0]?.nombre : (planActivo as any)?.planes?.nombre) || 'Plan sin nombre'}</p>
-                          <p className="text-green-600 text-lg font-medium">
-                            Vence: {new Date(planActivo.fecha_fin).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className="bg-green-500 text-white px-6 py-3 rounded-full text-lg font-bold">
-                          ✅ ACTIVA
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-2xl font-bold text-red-800">SIN MEMBRESÍA ACTIVA</p>
-                          <p className="text-red-600 text-lg font-medium">No puede acceder al gimnasio</p>
-                        </div>
-                        <span className="bg-red-500 text-white px-6 py-3 rounded-full text-lg font-bold">
-                          ❌ VENCIDA
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Última visita */}
-                {clienteInfo.ultima_asistencia && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-blue-800 text-lg">
-                      <Calendar className="h-5 w-5 inline mr-2" />
-                      <strong>Última visita:</strong> {new Date(clienteInfo.ultima_asistencia).toLocaleDateString()}
+              <div className="p-16">
+                {/* Botón de registro */}
+                {planActivo && clienteInfo.activo ? (
+                  <button
+                    onClick={registrarAsistencia}
+                    disabled={registrandoAsistencia}
+                    className="w-full bg-green-600 text-white py-16 px-16 rounded-3xl hover:bg-green-700 disabled:opacity-50 flex items-center justify-center space-x-8 text-7xl font-black shadow-2xl transform transition-transform hover:scale-105"
+                  >
+                    <CheckCircle className="h-24 w-24" />
+                    <span>
+                      {registrandoAsistencia ? 'REGISTRANDO...' : '✅ ACCESO AUTORIZADO'}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="w-full bg-red-100 border-8 border-red-300 rounded-3xl p-16 text-center">
+                    <p className="text-red-800 text-7xl font-black mb-4">
+                      🚫 ACCESO DENEGADO
+                    </p>
+                    <p className="text-red-600 text-4xl font-bold">
+                      Renovar membresía en recepción
                     </p>
                   </div>
                 )}
 
-                {/* Botón de registro */}
-                <div className="pt-4">
-                  {planActivo && clienteInfo.activo ? (
-                    <button
-                      onClick={registrarAsistencia}
-                      disabled={registrandoAsistencia}
-                      className="w-full bg-green-600 text-white py-6 px-8 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center space-x-3 text-xl font-bold"
-                    >
-                      <CheckCircle className="h-8 w-8" />
-                      <span>
-                        {registrandoAsistencia ? 'Registrando...' : '✅ REGISTRAR ASISTENCIA'}
-                      </span>
-                    </button>
-                  ) : (
-                    <div className="w-full bg-red-100 border-2 border-red-300 rounded-lg p-6 text-center">
-                      <p className="text-red-800 text-xl font-bold">
-                        ⚠️ NO PUEDE ACCEDER
-                      </p>
-                      <p className="text-red-600 text-lg">
-                        El cliente debe renovar su membresía
-                      </p>
-                    </div>
-                  )}
-                </div>
+                {/* Botón para nueva búsqueda */}
+                <button
+                  onClick={() => {
+                    setClienteInfo(null)
+                    setBusqueda('')
+                    setError('')
+                  }}
+                  className="w-full mt-12 bg-blue-600 text-white py-12 px-12 rounded-3xl hover:bg-blue-700 flex items-center justify-center space-x-6 text-5xl font-black shadow-2xl transform transition-transform hover:scale-105"
+                >
+                  <Search className="h-16 w-16" />
+                  <span>NUEVA CONSULTA</span>
+                </button>
               </div>
             </div>
           )}
 
           {/* Instrucciones */}
           {!clienteInfo && !loading && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-blue-900 mb-3">📋 Instrucciones:</h3>
-              <ul className="text-blue-800 space-y-2 text-lg">
-                <li>• Ingresa el documento, nombre o teléfono del cliente</li>
-                <li>• Presiona Enter o haz clic en "Buscar"</li>
-                <li>• Verifica que tenga membresía ACTIVA antes de permitir acceso</li>
-                <li>• Solo registra asistencia si el estado es VERDE ✅</li>
+            <div className="bg-blue-50 border-8 border-blue-200 rounded-3xl p-16">
+              <h3 className="text-6xl font-black text-blue-900 mb-12 text-center">📱 INSTRUCCIONES:</h3>
+              <ul className="text-blue-800 space-y-8 text-4xl font-bold">
+                <li>• Ingresa tu NÚMERO DE DOCUMENTO</li>
+                <li>• Presiona ENTER o toca "CONSULTAR"</li>
+                <li>• Si tienes membresía ACTIVA aparecerá en VERDE ✅</li>
+                <li>• Presiona "ACCESO AUTORIZADO" para entrar al gym</li>
               </ul>
             </div>
           )}
