@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Plus } from 'lucide-react'
+import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Plus, Edit } from 'lucide-react'
 import { getBuenosAiresDate, getBuenosAiresDateString } from '@/lib/timezone-utils'
 
 interface ClienteInfo {
@@ -15,6 +15,7 @@ interface ClienteInfo {
   activo: boolean
   inscripciones: Array<{
     id: string
+    plan_id: string
     estado: string
     fecha_inicio: string
     fecha_fin: string
@@ -39,6 +40,11 @@ export default function ConsultasPage() {
   const [showPlanModal, setShowPlanModal] = useState(false)
   const [assigningPlan, setAssigningPlan] = useState(false)
   const [fechaInicioPlan, setFechaInicioPlan] = useState('')
+  
+  // Estados para modal de modificar fecha
+  const [showModifyModal, setShowModifyModal] = useState(false)
+  const [modifyingPlan, setModifyingPlan] = useState(false)
+  const [nuevaFechaInicio, setNuevaFechaInicio] = useState('')
 
   // Función para convertir fecha a formato YYYY-MM-DD para input date
   const formatDateForInput = (date: Date) => {
@@ -51,26 +57,15 @@ export default function ConsultasPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        // Buscar el gimnasio del usuario a través de usuarios_gimnasios
-        const { data: usuarioGimnasio } = await supabase
-          .from('usuarios_gimnasios')
-          .select('gimnasio_id')
+        // Buscar gimnasio del usuario directamente
+        const { data: gimnasio } = await supabase
+          .from('gimnasios')
+          .select('id')
           .eq('usuario_id', user.id)
           .single()
 
-        if (usuarioGimnasio) {
-          setGimnasioId(usuarioGimnasio.gimnasio_id)
-        } else {
-          // Si no está en usuarios_gimnasios, buscar en gimnasios directamente (para dueños)
-          const { data: gimnasio } = await supabase
-            .from('gimnasios')
-            .select('id')
-            .eq('usuario_id', user.id)
-            .single()
-
-          if (gimnasio) {
-            setGimnasioId(gimnasio.id)
-          }
+        if (gimnasio) {
+          setGimnasioId(gimnasio.id)
         }
       } catch (error) {
         console.error('Error obteniendo gimnasio del usuario:', error)
@@ -126,6 +121,7 @@ export default function ConsultasPage() {
           activo,
           inscripciones (
             id,
+            plan_id,
             estado,
             fecha_inicio,
             fecha_fin,
@@ -205,6 +201,19 @@ export default function ConsultasPage() {
       const fechaVencimiento = new Date(fechaInicio)
       fechaVencimiento.setDate(fechaInicio.getDate() + plan.duracion_dias)
 
+      // Cambiar inscripciones anteriores a 'vencida' para mantener historial
+      const { error: updateError } = await supabase
+        .from('inscripciones')
+        .update({ estado: 'vencida' })
+        .eq('cliente_id', clienteInfo.id)
+        .eq('estado', 'activa')
+
+      if (updateError) {
+        console.warn('Warning updating previous inscriptions:', updateError)
+        // Continuar aunque falle la actualización de inscripciones anteriores
+      }
+
+      // Insertar nueva inscripción
       const { error: inscripcionError } = await supabase
         .from('inscripciones')
         .insert({
@@ -228,6 +237,76 @@ export default function ConsultasPage() {
       alert('Error al asignar el plan: ' + error.message)
     } finally {
       setAssigningPlan(false)
+    }
+  }
+
+  const modificarFechaPlan = async () => {
+    if (!clienteInfo || !nuevaFechaInicio) {
+      alert('⚠️ Selecciona la nueva fecha de inicio')
+      return
+    }
+
+    const planActivo = clienteInfo.inscripciones?.find(
+      i => i.estado === 'activa'
+    )
+
+    if (!planActivo) {
+      alert('No hay plan activo para modificar')
+      return
+    }
+
+    setModifyingPlan(true)
+
+    try {
+      // Crear nueva fecha desde string YYYY-MM-DD
+      const [year, month, day] = nuevaFechaInicio.split('-').map(Number)
+      const nuevaFechaInicioDate = new Date(year, month - 1, day)
+      
+      // Calcular nueva fecha de vencimiento basada en el plan actual
+      const planOriginal = Array.isArray(planActivo.planes) ? planActivo.planes[0] : planActivo.planes
+      
+      if (!planActivo.plan_id) {
+        alert('Error: No se pudo obtener el ID del plan')
+        return
+      }
+
+      // Obtener duración del plan desde la base de datos
+      const { data: planData } = await supabase
+        .from('planes')
+        .select('duracion_dias')
+        .eq('id', planActivo.plan_id)
+        .single()
+
+      if (!planData) {
+        alert('Error: No se pudo obtener información del plan')
+        return
+      }
+
+      const nuevaFechaVencimiento = new Date(nuevaFechaInicioDate)
+      nuevaFechaVencimiento.setDate(nuevaFechaInicioDate.getDate() + planData.duracion_dias)
+
+      // Actualizar la inscripción existente
+      const { error: updateError } = await supabase
+        .from('inscripciones')
+        .update({
+          fecha_inicio: nuevaFechaInicioDate.toISOString(),
+          fecha_fin: nuevaFechaVencimiento.toISOString()
+        })
+        .eq('id', planActivo.id)
+
+      if (updateError) throw updateError
+
+      setShowModifyModal(false)
+      alert(`✅ Fecha del plan actualizada correctamente`)
+      
+      // Recargar información del cliente
+      buscarCliente()
+
+    } catch (error: any) {
+      console.error('Error modificando fecha del plan:', error)
+      alert('Error al modificar la fecha: ' + error.message)
+    } finally {
+      setModifyingPlan(false)
     }
   }
 
@@ -262,7 +341,7 @@ export default function ConsultasPage() {
   }
 
   const planActivo = clienteInfo?.inscripciones?.find(
-    i => i.estado === 'activa' && new Date(i.fecha_fin) >= getBuenosAiresDate()
+    i => i.estado === 'activa'
   )
 
   return (
@@ -364,9 +443,21 @@ export default function ConsultasPage() {
                         })}
                       </p>
                     </div>
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      ACTIVA
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        ACTIVA
+                      </span>
+                      <button
+                        onClick={() => {
+                          setNuevaFechaInicio(planActivo.fecha_inicio.split('T')[0])
+                          setShowModifyModal(true)
+                        }}
+                        className="bg-orange-600 text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center space-x-1"
+                      >
+                        <Edit className="h-3 w-3" />
+                        <span>Modificar Fecha</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -428,14 +519,14 @@ export default function ConsultasPage() {
             <div className="flex space-x-4">
               <button
                 onClick={registrarAsistencia}
-                disabled={!clienteInfo.activo || !planActivo}
+                disabled={!planActivo}
                 className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 <CheckCircle className="h-5 w-5" />
                 <span>Registrar Asistencia</span>
               </button>
               
-              {(!clienteInfo.activo || !planActivo) && (
+              {!planActivo && (
                 <div className="flex-1 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                   <p className="text-yellow-800 text-sm text-center">
                     ⚠️ Cliente debe renovar membresía para registrar asistencia
@@ -553,6 +644,65 @@ export default function ConsultasPage() {
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                 >
                   Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para modificar fecha del plan */}
+      {showModifyModal && clienteInfo && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Modificar Fecha del Plan de {clienteInfo.nombre} {clienteInfo.apellido}
+              </h3>
+              
+              {/* Campo de nueva fecha */}
+              <div className="mb-6">
+                <label htmlFor="nuevaFechaInicio" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nueva fecha de inicio del plan:
+                </label>
+                <input
+                  type="date"
+                  id="nuevaFechaInicio"
+                  value={nuevaFechaInicio}
+                  onChange={(e) => setNuevaFechaInicio(e.target.value)}
+                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                />
+                {nuevaFechaInicio && (
+                  <div className="text-sm text-orange-600 font-medium mt-2">
+                    📅 Nueva fecha: {(() => {
+                      const [year, month, day] = nuevaFechaInicio.split('-').map(Number)
+                      const fecha = new Date(year, month - 1, day)
+                      return fecha.toLocaleDateString('es-AR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })
+                    })()}
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  💡 La fecha de vencimiento se recalculará automáticamente
+                </p>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowModifyModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={modificarFechaPlan}
+                  disabled={!nuevaFechaInicio || modifyingPlan}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {modifyingPlan ? 'Modificando...' : 'Modificar Fecha'}
                 </button>
               </div>
             </div>
