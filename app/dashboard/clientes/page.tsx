@@ -30,7 +30,19 @@ export default function ClientesPage() {
 
         const { data: clientesData } = await supabase
           .from('clientes')
-          .select('*')
+          .select(`
+            *,
+            inscripciones (
+              id,
+              estado,
+              fecha_inicio,
+              fecha_fin,
+              planes (
+                nombre,
+                precio
+              )
+            )
+          `)
           .eq('gimnasio_id', gimnasio.id)
           .order('created_at', { ascending: false })
 
@@ -61,6 +73,15 @@ export default function ClientesPage() {
       console.error('Error deleting client:', error)
       alert('Error al eliminar el cliente')
     }
+  }
+
+  const tienePlanActivo = (cliente: any) => {
+    if (!cliente.inscripciones || cliente.inscripciones.length === 0) return false
+    
+    const ahora = new Date()
+    return cliente.inscripciones.some((inscripcion: any) => 
+      inscripcion.estado === 'activa' && new Date(inscripcion.fecha_fin) >= ahora
+    )
   }
 
   const filteredClientes = clientes.filter(cliente =>
@@ -158,11 +179,11 @@ export default function ClientesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 text-xs font-semibold rounded-full ${
-                          cliente.activo 
+                          tienePlanActivo(cliente) 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {cliente.activo ? 'Activo' : 'Inactivo'}
+                          {tienePlanActivo(cliente) ? 'Con Plan Activo' : 'Sin Plan Activo'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

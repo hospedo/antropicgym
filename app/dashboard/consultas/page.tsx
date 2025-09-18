@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Search, User, Calendar, CreditCard, CheckCircle, XCircle } from 'lucide-react'
+import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Plus } from 'lucide-react'
 import { getBuenosAiresDate, getBuenosAiresDateString } from '@/lib/timezone-utils'
 
 interface ClienteInfo {
@@ -33,6 +33,17 @@ export default function ConsultasPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [gimnasioId, setGimnasioId] = useState<string>('')
+  
+  // Estados para modal de asignación de plan
+  const [planesDisponibles, setPlanesDisponibles] = useState<any[]>([])
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [assigningPlan, setAssigningPlan] = useState(false)
+  const [fechaInicioPlan, setFechaInicioPlan] = useState('')
+
+  // Función para convertir fecha a formato YYYY-MM-DD para input date
+  const formatDateForInput = (date: Date) => {
+    return date.toISOString().split('T')[0]
+  }
 
   useEffect(() => {
     const obtenerGimnasioUsuario = async () => {
@@ -68,6 +79,23 @@ export default function ConsultasPage() {
 
     obtenerGimnasioUsuario()
   }, [])
+
+  const cargarPlanes = async () => {
+    if (!gimnasioId) return
+    
+    try {
+      const { data: planesData } = await supabase
+        .from('planes')
+        .select('*')
+        .eq('gimnasio_id', gimnasioId)
+        .eq('activo', true)
+        .order('nombre')
+
+      setPlanesDisponibles(planesData || [])
+    } catch (error) {
+      console.error('Error loading plans:', error)
+    }
+  }
 
   const buscarCliente = async () => {
     if (!busqueda.trim()) {
@@ -152,6 +180,54 @@ export default function ConsultasPage() {
       console.error(error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const asignarPlan = async (planId: string) => {
+    if (!clienteInfo) return
+    if (!fechaInicioPlan) {
+      alert('⚠️ Selecciona la fecha de inicio del plan')
+      return
+    }
+
+    setAssigningPlan(true)
+
+    try {
+      const plan = planesDisponibles.find(p => p.id === planId)
+      if (!plan) {
+        alert('Plan no encontrado')
+        return
+      }
+
+      // Crear fecha desde string YYYY-MM-DD
+      const [year, month, day] = fechaInicioPlan.split('-').map(Number)
+      const fechaInicio = new Date(year, month - 1, day) // month - 1 porque Date usa índice 0
+      const fechaVencimiento = new Date(fechaInicio)
+      fechaVencimiento.setDate(fechaInicio.getDate() + plan.duracion_dias)
+
+      const { error: inscripcionError } = await supabase
+        .from('inscripciones')
+        .insert({
+          cliente_id: clienteInfo.id,
+          plan_id: planId,
+          fecha_inicio: fechaInicio.toISOString(),
+          fecha_fin: fechaVencimiento.toISOString(),
+          estado: 'activa'
+        })
+
+      if (inscripcionError) throw inscripcionError
+
+      setShowPlanModal(false)
+      alert(`✅ Plan "${plan.nombre}" asignado correctamente`)
+      
+      // Recargar información del cliente
+      buscarCliente()
+
+    } catch (error: any) {
+      console.error('Error asignando plan:', error)
+      alert('Error al asignar el plan: ' + error.message)
+    } finally {
+      setAssigningPlan(false)
     }
   }
 
@@ -281,7 +357,11 @@ export default function ConsultasPage() {
                     <div>
                       <p className="font-medium text-green-800">{(Array.isArray(planActivo.planes) ? planActivo.planes[0]?.nombre : planActivo.planes?.nombre) || 'Plan sin nombre'}</p>
                       <p className="text-green-600 text-sm">
-                        Vence: {new Date(planActivo.fecha_fin).toLocaleDateString()}
+                        Vence: {new Date(planActivo.fecha_fin).toLocaleDateString('es-AR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}
                       </p>
                     </div>
                     <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -296,9 +376,22 @@ export default function ConsultasPage() {
                       <p className="font-medium text-red-800">Sin membresía activa</p>
                       <p className="text-red-600 text-sm">Debe renovar para acceder</p>
                     </div>
-                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      VENCIDA
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        VENCIDA
+                      </span>
+                      <button
+                        onClick={() => {
+                          cargarPlanes()
+                          setFechaInicioPlan(formatDateForInput(getBuenosAiresDate()))
+                          setShowPlanModal(true)
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center space-x-1"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Asignar Plan</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -315,7 +408,11 @@ export default function ConsultasPage() {
                   <p className="text-sm font-medium text-gray-600">Última visita</p>
                   <p className="text-lg font-semibold text-gray-900">
                     {clienteInfo.ultima_asistencia 
-                      ? new Date(clienteInfo.ultima_asistencia).toLocaleDateString()
+                      ? new Date(clienteInfo.ultima_asistencia).toLocaleDateString('es-AR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })
                       : 'Nunca'
                     }
                   </p>
@@ -360,6 +457,106 @@ export default function ConsultasPage() {
             <li>• Verifica el estado de la membresía antes de permitir el acceso</li>
             <li>• Registra la asistencia si el cliente tiene membresía activa</li>
           </ul>
+        </div>
+      )}
+
+      {/* Modal para seleccionar plan */}
+      {showPlanModal && clienteInfo && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Seleccionar Plan para {clienteInfo.nombre} {clienteInfo.apellido}
+              </h3>
+              
+              {/* Campo de fecha */}
+              <div className="mb-6">
+                <label htmlFor="fechaInicioPlan" className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha de inicio del plan:
+                </label>
+                <input
+                  type="date"
+                  id="fechaInicioPlan"
+                  value={fechaInicioPlan}
+                  onChange={(e) => setFechaInicioPlan(e.target.value)}
+                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+                {fechaInicioPlan && (
+                  <div className="text-sm text-blue-600 font-medium mt-2">
+                    📅 Fecha seleccionada: {(() => {
+                      const [year, month, day] = fechaInicioPlan.split('-').map(Number)
+                      const fecha = new Date(year, month - 1, day)
+                      return fecha.toLocaleDateString('es-AR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })
+                    })()}
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  💡 Ajusta la fecha si el cliente pagó en otra fecha
+                </p>
+              </div>
+
+              {/* Lista de planes */}
+              {planesDisponibles.length > 0 ? (
+                <div className="space-y-3 mb-6">
+                  {planesDisponibles.map((plan) => (
+                    <div
+                      key={plan.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{plan.nombre}</h4>
+                          <p className="text-sm text-gray-600">
+                            ${plan.precio} • {plan.duracion_dias} días
+                          </p>
+                          {fechaInicioPlan && (
+                            <p className="text-xs text-blue-600 mt-1">
+                              Vence: {(() => {
+                                // Crear fecha desde string YYYY-MM-DD
+                                const [year, month, day] = fechaInicioPlan.split('-').map(Number)
+                                const inicio = new Date(year, month - 1, day) // month - 1 porque Date usa índice 0
+                                const vencimiento = new Date(inicio)
+                                vencimiento.setDate(inicio.getDate() + plan.duracion_dias)
+                                return vencimiento.toLocaleDateString('es-AR', {
+                                  day: '2-digit',
+                                  month: '2-digit', 
+                                  year: 'numeric'
+                                })
+                              })()}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => asignarPlan(plan.id)}
+                          disabled={assigningPlan || !fechaInicioPlan}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {assigningPlan ? 'Asignando...' : 'Seleccionar'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-500">No hay planes disponibles</p>
+                </div>
+              )}
+              
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowPlanModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

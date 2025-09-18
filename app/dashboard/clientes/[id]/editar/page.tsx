@@ -20,10 +20,18 @@ export default function EditarClientePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [planes, setPlanes] = useState<any[]>([])
+  const [selectedPlan, setSelectedPlan] = useState<string>('')
+  const [inscripciones, setInscripciones] = useState<any[]>([])
+  const [fechaInicio, setFechaInicio] = useState<string>(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
-    const loadCliente = async () => {
+    const loadData = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Cargar cliente
         const { data: cliente } = await supabase
           .from('clientes')
           .select('*')
@@ -39,16 +47,49 @@ export default function EditarClientePage() {
             documento: cliente.documento || '',
             activo: cliente.activo ?? true
           })
+
+          // Cargar inscripciones del cliente
+          const { data: inscripcionesData } = await supabase
+            .from('inscripciones')
+            .select(`
+              *,
+              planes (
+                nombre,
+                precio,
+                duracion_dias
+              )
+            `)
+            .eq('cliente_id', id)
+            .order('fecha_inicio', { ascending: false })
+
+          setInscripciones(inscripcionesData || [])
+        }
+
+        // Cargar planes disponibles del gimnasio
+        const { data: gimnasio } = await supabase
+          .from('gimnasios')
+          .select('id')
+          .eq('usuario_id', user.id)
+          .single()
+
+        if (gimnasio) {
+          const { data: planesData } = await supabase
+            .from('planes')
+            .select('*')
+            .eq('gimnasio_id', gimnasio.id)
+            .eq('activo', true)
+
+          setPlanes(planesData || [])
         }
       } catch (error) {
-        console.error('Error loading client:', error)
-        setError('Error al cargar los datos del cliente')
+        console.error('Error loading data:', error)
+        setError('Error al cargar los datos')
       } finally {
         setLoading(false)
       }
     }
 
-    if (id) loadCliente()
+    if (id) loadData()
   }, [id])
 
 
@@ -59,6 +100,79 @@ export default function EditarClientePage() {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }))
+  }
+
+  const asignarPlan = async () => {
+    if (!selectedPlan) {
+      setError('Selecciona un plan')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: gimnasio } = await supabase
+        .from('gimnasios')
+        .select('id')
+        .eq('usuario_id', user.id)
+        .single()
+
+      if (!gimnasio) {
+        setError('Gimnasio no encontrado')
+        return
+      }
+
+      const planSeleccionado = planes.find(p => p.id === selectedPlan)
+      if (!planSeleccionado) {
+        setError('Plan no encontrado')
+        return
+      }
+
+      const fechaInicioDate = new Date(fechaInicio)
+      const fechaVencimiento = new Date(fechaInicioDate)
+      fechaVencimiento.setDate(fechaInicioDate.getDate() + planSeleccionado.duracion_dias)
+
+      const { error: inscripcionError } = await supabase
+        .from('inscripciones')
+        .insert({
+          cliente_id: id,
+          plan_id: selectedPlan,
+          gimnasio_id: gimnasio.id,
+          fecha_inicio: fechaInicioDate.toISOString(),
+          fecha_vencimiento: fechaVencimiento.toISOString(),
+          estado: 'activa',
+          precio: planSeleccionado.precio
+        })
+
+      if (inscripcionError) throw inscripcionError
+
+      // Recargar inscripciones
+      const { data: inscripcionesData } = await supabase
+        .from('inscripciones')
+        .select(`
+          *,
+          planes (
+            nombre,
+            precio,
+            duracion_dias
+          )
+        `)
+        .eq('cliente_id', id)
+        .order('fecha_inicio', { ascending: false })
+
+      setInscripciones(inscripcionesData || [])
+      setSelectedPlan('')
+      setFechaInicio(new Date().toISOString().split('T')[0])
+      alert('Plan asignado exitosamente')
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : 'Error al asignar el plan')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,6 +314,126 @@ export default function EditarClientePage() {
             <p className="mt-1 text-xs text-amber-600">
               ⚠️ Sin email no recibirás promociones ni notificaciones futuras
             </p>
+          </div>
+
+          {/* Membresías/Inscripciones */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Membresías</h3>
+            
+            {/* Inscripciones existentes */}
+            {inscripciones.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Historial de membresías:</h4>
+                <div className="space-y-2">
+                  {inscripciones.map((inscripcion) => {
+                    const fechaVencimiento = new Date(inscripcion.fecha_vencimiento)
+                    const esActiva = inscripcion.estado === 'activa' && fechaVencimiento >= new Date()
+                    
+                    return (
+                      <div
+                        key={inscripcion.id}
+                        className={`p-3 rounded-lg border ${
+                          esActiva 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">
+                              {inscripcion.planes?.nombre || 'Plan eliminado'}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Vence: {fechaVencimiento.toLocaleDateString()}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              esActiva
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {esActiva ? 'ACTIVA' : 'VENCIDA'}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Asignar nuevo plan */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Asignar nuevo plan:</h4>
+              
+              <div className="space-y-3">
+                {/* Fecha de inicio */}
+                <div>
+                  <label htmlFor="fechaInicio" className="block text-xs font-medium text-gray-600 mb-1">
+                    Fecha de inicio del plan:
+                  </label>
+                  <input
+                    type="date"
+                    id="fechaInicio"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Ajusta la fecha si el cliente pagó en otra fecha
+                  </p>
+                </div>
+
+                {/* Selector de plan */}
+                <div className="flex space-x-3">
+                  <select
+                    value={selectedPlan}
+                    onChange={(e) => setSelectedPlan(e.target.value)}
+                    className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Seleccionar plan...</option>
+                    {planes.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.nombre} - ${plan.precio} ({plan.duracion_dias} días)
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={asignarPlan}
+                    disabled={!selectedPlan || saving}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? 'Asignando...' : 'Asignar'}
+                  </button>
+                </div>
+
+                {/* Mostrar fecha de vencimiento calculada */}
+                {selectedPlan && (
+                  <div className="text-sm text-gray-600 bg-white p-2 rounded border">
+                    <span className="font-medium">Fecha de vencimiento: </span>
+                    {(() => {
+                      const planSeleccionado = planes.find(p => p.id === selectedPlan)
+                      if (planSeleccionado && fechaInicio) {
+                        const inicioDate = new Date(fechaInicio)
+                        const vencimientoDate = new Date(inicioDate)
+                        vencimientoDate.setDate(inicioDate.getDate() + planSeleccionado.duracion_dias)
+                        return vencimientoDate.toLocaleDateString()
+                      }
+                      return 'Selecciona un plan'
+                    })()}
+                  </div>
+                )}
+              </div>
+
+              {planes.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  No hay planes disponibles. Crea planes en la sección de Planes.
+                </p>
+              )}
+            </div>
           </div>
 
           {error && (
