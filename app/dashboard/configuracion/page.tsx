@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Gimnasio, Usuario } from '@/types'
-import { Save, Building, User, Phone, Mail, MapPin, Clock, Settings, UserPlus, Users } from 'lucide-react'
+import { Save, Building, User, Phone, Mail, MapPin, Clock, Settings, UserPlus, Users, Crown } from 'lucide-react'
 import { gymService } from '@/lib/gym-service'
 import { ensureUserHasGym } from '@/lib/gym-recovery'
 
@@ -236,6 +236,7 @@ export default function ConfiguracionPage() {
   const tabs = [
     { id: 'general', name: 'General', icon: Settings },
     { id: 'recepcion', name: 'Recepción', icon: UserPlus },
+    { id: 'suscripcion', name: 'Suscripción', icon: Crown },
     { id: 'usuarios', name: 'Usuarios', icon: Users }
   ]
 
@@ -448,6 +449,32 @@ export default function ConfiguracionPage() {
                     Configurar Recepcionista
                   </a>
                 </div>
+              </div>
+            </div>
+          </div>
+        )
+      
+      case 'suscripcion':
+        return (
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <Crown className="mr-2 h-5 w-5" />
+              Gestionar Suscripción
+            </h3>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Gestiona tu plan de suscripción y accede a funcionalidades premium.
+              </p>
+              
+              <div className="flex justify-center">
+                <a
+                  href="/dashboard/suscripcion"
+                  className="flex items-center justify-center px-6 py-4 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors shadow-lg"
+                >
+                  <Crown className="mr-3 h-5 w-5" />
+                  Ver Detalles de Suscripción
+                </a>
               </div>
             </div>
           </div>

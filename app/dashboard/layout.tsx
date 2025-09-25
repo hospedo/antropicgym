@@ -78,7 +78,6 @@ export default function DashboardLayout({
     { name: 'Planes', href: '/dashboard/planes', icon: CreditCard },
     { name: 'Asistencias', href: '/dashboard/asistencias', icon: Calendar },
     { name: 'Pagos', href: '/dashboard/pagos', icon: DollarSign },
-    { name: 'Suscripción', href: '/dashboard/suscripcion', icon: Crown },
     { name: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
   ]
 

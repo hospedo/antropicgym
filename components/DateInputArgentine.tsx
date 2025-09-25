@@ -2,6 +2,7 @@
 
 import { Calendar } from 'lucide-react'
 import { formatInputDate } from '@/lib/date-utils'
+import { useState, useRef } from 'react'
 
 interface DateInputArgentineProps {
   id?: string
@@ -20,6 +21,8 @@ export default function DateInputArgentine({
   className = "",
   disabled = false
 }: DateInputArgentineProps) {
+  const [showTextInput, setShowTextInput] = useState(false)
+  const hiddenDateInputRef = useRef<HTMLInputElement>(null)
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let inputValue = e.target.value.replace(/\D/g, '') // Solo números
@@ -71,20 +74,54 @@ export default function DateInputArgentine({
     }
   }
 
+  const handleCalendarClick = () => {
+    // Fallback para navegadores que no soportan showPicker
+    if (hiddenDateInputRef.current) {
+      if (hiddenDateInputRef.current.showPicker) {
+        hiddenDateInputRef.current.showPicker()
+      } else {
+        // Hacer focus y click en el input de fecha
+        hiddenDateInputRef.current.focus()
+        hiddenDateInputRef.current.click()
+      }
+    }
+  }
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value // YYYY-MM-DD format
+    onChange(dateValue)
+  }
+
   return (
-    <div className="relative">
-      <input
-        type="text"
-        id={id}
-        placeholder={placeholder}
-        defaultValue={value ? formatInputDate(value) : ''}
-        onChange={handleChange}
-        disabled={disabled}
-        maxLength={10}
-        className={`w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10 ${className}`}
-      />
-      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-        <Calendar className="h-5 w-5 text-gray-400" />
+    <div className="space-y-2">
+      {/* Input de texto principal con formato argentino */}
+      <div className="relative">
+        <input
+          type="text"
+          id={id}
+          placeholder={placeholder}
+          value={value ? formatInputDate(value) : ''}
+          onChange={handleChange}
+          disabled={disabled}
+          maxLength={10}
+          className={`w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10 ${className}`}
+        />
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <Calendar className="h-5 w-5 text-gray-400" />
+        </div>
+      </div>
+      
+      {/* Selector de calendario alternativo */}
+      <div className="flex items-center space-x-2">
+        <input
+          ref={hiddenDateInputRef}
+          type="date"
+          value={value}
+          onChange={handleDateInputChange}
+          disabled={disabled}
+          className="text-sm border-gray-300 rounded px-2 py-1"
+        />
+        <span className="text-xs text-gray-500">← O usa el selector de calendario</span>
       </div>
     </div>
   )
