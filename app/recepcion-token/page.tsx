@@ -357,6 +357,9 @@ export default function RecepcionToken() {
   const planActivo = clienteInfo?.inscripciones?.find(
     i => i.estado === 'activa' && new Date(i.fecha_fin) >= getBuenosAiresDate()
   )
+  
+  // Determinar si el cliente realmente está activo (basado en planes, no en el campo DB)
+  const clienteRealmenteActivo = !!planActivo
 
   const hoy = getBuenosAiresDate().toLocaleDateString()
 
@@ -482,7 +485,7 @@ export default function RecepcionToken() {
                     {clienteInfo.nombre} {clienteInfo.apellido}
                   </h2>
                   <div className="flex items-center space-x-4">
-                    {clienteInfo.activo ? (
+                    {clienteRealmenteActivo ? (
                       <span className="flex items-center text-green-600 text-lg font-semibold">
                         <CheckCircle className="h-6 w-6 mr-2" />
                         ACTIVO
@@ -562,7 +565,7 @@ export default function RecepcionToken() {
 
                 {/* Botones de acción */}
                 <div className="pt-4 space-y-4">
-                  {planActivo && clienteInfo.activo ? (
+                  {planActivo && clienteRealmenteActivo ? (
                     <button
                       onClick={registrarAsistencia}
                       disabled={registrandoAsistencia || !isOnline}
@@ -597,7 +600,7 @@ export default function RecepcionToken() {
                   )}
 
                   {/* Botón renovar plan también para clientes activos */}
-                  {planActivo && clienteInfo.activo && (
+                  {planActivo && clienteRealmenteActivo && (
                     <button
                       onClick={() => setShowLoginRecepcion(true)}
                       disabled={!isOnline}

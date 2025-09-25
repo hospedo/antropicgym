@@ -150,6 +150,9 @@ export default function RecepcionSimple() {
   const planActivo = clienteInfo?.inscripciones?.find(
     i => i.estado === 'activa' && new Date(i.fecha_fin) >= getBuenosAiresDate()
   )
+  
+  // Determinar si el cliente realmente está activo (basado en planes, no en el campo DB)
+  const clienteRealmenteActivo = !!planActivo
 
   const hoy = getBuenosAiresDate().toLocaleDateString()
 
@@ -207,7 +210,7 @@ export default function RecepcionSimple() {
           {clienteInfo && (
             <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
               {/* Mensaje de Bienvenida */}
-              {planActivo && clienteInfo.activo ? (
+              {planActivo && clienteRealmenteActivo ? (
                 <div className="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-20">
                   <h2 className="text-9xl font-black mb-8">¡BIENVENIDO/A!</h2>
                   <p className="text-6xl font-black">
@@ -230,7 +233,7 @@ export default function RecepcionSimple() {
 
               <div className="p-16">
                 {/* Botón de registro */}
-                {planActivo && clienteInfo.activo ? (
+                {planActivo && clienteRealmenteActivo ? (
                   <button
                     onClick={registrarAsistencia}
                     disabled={registrandoAsistencia}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Cliente, ClienteUpdate } from '@/types'
+import { formatDateSafe, isMembershipActive } from '@/lib/date-utils'
 
 export default function EditarClientePage() {
   const { id } = useParams()
@@ -141,11 +142,10 @@ export default function EditarClientePage() {
         .insert({
           cliente_id: id,
           plan_id: selectedPlan,
-          gimnasio_id: gimnasio.id,
-          fecha_inicio: fechaInicioDate.toISOString(),
-          fecha_vencimiento: fechaVencimiento.toISOString(),
+          fecha_inicio: fechaInicioDate.toISOString().split('T')[0],
+          fecha_fin: fechaVencimiento.toISOString().split('T')[0],
           estado: 'activa',
-          precio: planSeleccionado.precio
+          monto_pagado: planSeleccionado.precio
         })
 
       if (inscripcionError) throw inscripcionError
@@ -326,8 +326,27 @@ export default function EditarClientePage() {
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Historial de membresías:</h4>
                 <div className="space-y-2">
                   {inscripciones.map((inscripcion) => {
-                    const fechaVencimiento = new Date(inscripcion.fecha_vencimiento)
-                    const esActiva = inscripcion.estado === 'activa' && fechaVencimiento >= new Date()
+                    // Debug: verificar fecha
+                    console.log('Debug fecha:', { fecha_fin: inscripcion.fecha_fin, typeof: typeof inscripcion.fecha_fin })
+                    
+                    // Manejo seguro de fecha inline
+                    let fechaFormateada = '⚠️ Fecha inválida'
+                    let fechaValida = false
+                    
+                    if (inscripcion.fecha_fin) {
+                      try {
+                        const fecha = new Date(inscripcion.fecha_fin)
+                        if (!isNaN(fecha.getTime())) {
+                          fechaFormateada = fecha.toLocaleDateString()
+                          fechaValida = true
+                        }
+                      } catch (error) {
+                        console.log('Error parseando fecha:', error)
+                      }
+                    }
+                    
+                    const esActiva = inscripcion.estado === 'activa' && fechaValida && new Date(inscripcion.fecha_fin) >= new Date()
+                    const esError = !fechaValida
                     
                     return (
                       <div
@@ -335,6 +354,8 @@ export default function EditarClientePage() {
                         className={`p-3 rounded-lg border ${
                           esActiva 
                             ? 'bg-green-50 border-green-200' 
+                            : esError
+                            ? 'bg-red-50 border-red-200'
                             : 'bg-gray-50 border-gray-200'
                         }`}
                       >
@@ -344,17 +365,19 @@ export default function EditarClientePage() {
                               {inscripcion.planes?.nombre || 'Plan eliminado'}
                             </p>
                             <p className="text-sm text-gray-600">
-                              Vence: {fechaVencimiento.toLocaleDateString()}
+                              Vence: {fechaFormateada}
                             </p>
                           </div>
                           <span
                             className={`px-2 py-1 text-xs rounded-full ${
-                              esActiva
+                              esError
+                                ? 'bg-red-100 text-red-800'
+                                : esActiva
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {esActiva ? 'ACTIVA' : 'VENCIDA'}
+                            {esError ? 'ERROR' : esActiva ? 'ACTIVA' : 'VENCIDA'}
                           </span>
                         </div>
                       </div>
@@ -420,7 +443,11 @@ export default function EditarClientePage() {
                         const inicioDate = new Date(fechaInicio)
                         const vencimientoDate = new Date(inicioDate)
                         vencimientoDate.setDate(inicioDate.getDate() + planSeleccionado.duracion_dias)
-                        return vencimientoDate.toLocaleDateString()
+                        return vencimientoDate.toLocaleDateString('es-AR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })
                       }
                       return 'Selecciona un plan'
                     })()}

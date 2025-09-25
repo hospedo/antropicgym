@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Plus, Edit } from 'lucide-react'
+import { Search, User, Calendar, CreditCard, CheckCircle, XCircle, Plus, Edit, Trash2 } from 'lucide-react'
 import { getBuenosAiresDate, getBuenosAiresDateString } from '@/lib/timezone-utils'
+import { formatDateSafe, formatInputDate } from '@/lib/date-utils'
+import DateInputArgentine from '@/components/DateInputArgentine'
 
 interface ClienteInfo {
   id: string
@@ -26,6 +28,7 @@ interface ClienteInfo {
   }>
   ultima_asistencia?: string
   total_asistencias: number
+  asistencias_periodo_actual: number
 }
 
 export default function ConsultasPage() {
@@ -108,8 +111,8 @@ export default function ConsultasPage() {
     setClienteInfo(null)
 
     try {
-      // Buscar por documento, nombre, apellido o teléfono EN EL GIMNASIO DEL USUARIO
-      const { data: clientes, error: searchError } = await supabase
+      // Primero obtener todos los clientes del gimnasio
+      const { data: todosClientes, error: searchError } = await supabase
         .from('clientes')
         .select(`
           id,
@@ -132,12 +135,43 @@ export default function ConsultasPage() {
           )
         `)
         .eq('gimnasio_id', gimnasioId)
-        .or(`documento.ilike.%${busqueda}%,nombre.ilike.%${busqueda}%,apellido.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`)
 
       if (searchError) {
         setError(searchError.message)
         return
       }
+
+      // Filtrar en el cliente para permitir búsqueda por nombre completo
+      const busquedaLower = busqueda.toLowerCase().trim()
+      const palabrasBusqueda = busquedaLower.split(/\s+/).filter(p => p.length > 0)
+      
+      const clientes = todosClientes?.filter(cliente => {
+        const documento = cliente.documento?.toLowerCase() || ''
+        const nombre = cliente.nombre?.toLowerCase() || ''
+        const apellido = cliente.apellido?.toLowerCase() || ''
+        const telefono = cliente.telefono || ''
+        const nombreCompleto = `${nombre} ${apellido}`.trim()
+        
+        // Buscar por campos individuales
+        if (documento.includes(busquedaLower) ||
+            nombre.includes(busquedaLower) ||
+            apellido.includes(busquedaLower) ||
+            telefono.includes(busquedaLower)) {
+          return true
+        }
+        
+        // Buscar por nombre completo (coincidencia exacta)
+        if (nombreCompleto.includes(busquedaLower)) {
+          return true
+        }
+        
+        // Buscar que todas las palabras estén en el nombre completo
+        if (palabrasBusqueda.length > 1) {
+          return palabrasBusqueda.every(palabra => nombreCompleto.includes(palabra))
+        }
+        
+        return false
+      }) || []
 
       if (!clientes || clientes.length === 0) {
         setError('Cliente no encontrado')
@@ -155,17 +189,55 @@ export default function ConsultasPage() {
         .limit(1)
         .single()
 
-      // Contar total de asistencias
+      // Consulta directa a inscripciones como respaldo
+      const { data: inscripcionesDirectas, error: inscripcionesError } = await supabase
+        .from('inscripciones')
+        .select(`
+          id,
+          plan_id,
+          estado,
+          fecha_inicio,
+          fecha_fin,
+          planes (
+            nombre,
+            precio
+          )
+        `)
+        .eq('cliente_id', cliente.id)
+
+      console.log('Cliente encontrado:', cliente)
+      console.log('Inscripciones desde relación:', cliente.inscripciones)
+      console.log('Inscripciones consulta directa:', inscripcionesDirectas, inscripcionesError)
+
+      // Contar total de asistencias (histórico)
       const { count: totalAsistencias } = await supabase
         .from('asistencias')
         .select('*', { count: 'exact', head: true })
         .eq('cliente_id', cliente.id)
 
+      // Contar asistencias del período actual de membresía
+      let asistenciasPeriodoActual = 0
+      const inscripcionActiva = (inscripcionesDirectas || cliente.inscripciones || []).find(
+        i => i.estado === 'activa' && new Date(i.fecha_fin + 'T23:59:59') >= new Date()
+      )
+      
+      if (inscripcionActiva) {
+        const { count: asistenciasPeriodo } = await supabase
+          .from('asistencias')
+          .select('*', { count: 'exact', head: true })
+          .eq('cliente_id', cliente.id)
+          .gte('fecha', inscripcionActiva.fecha_inicio)
+          .lte('fecha', inscripcionActiva.fecha_fin)
+        
+        asistenciasPeriodoActual = asistenciasPeriodo || 0
+      }
+
       setClienteInfo({
         ...cliente,
         ultima_asistencia: ultimaAsistencia?.fecha,
         total_asistencias: totalAsistencias || 0,
-        inscripciones: cliente.inscripciones.map(inscripcion => ({
+        asistencias_periodo_actual: asistenciasPeriodoActual,
+        inscripciones: (inscripcionesDirectas || cliente.inscripciones || []).map(inscripcion => ({
           ...inscripcion,
           planes: Array.isArray(inscripcion.planes) ? inscripcion.planes : [inscripcion.planes].filter(Boolean)
         }))
@@ -184,6 +256,23 @@ export default function ConsultasPage() {
     if (!fechaInicioPlan) {
       alert('⚠️ Selecciona la fecha de inicio del plan')
       return
+    }
+
+    // Verificar si hay planes activos
+    const planesActivosActuales = clienteInfo.inscripciones?.filter(
+      i => {
+        const fechaFin = new Date(i.fecha_fin + 'T23:59:59')
+        const hoy = new Date()
+        hoy.setHours(0, 0, 0, 0)
+        return i.estado === 'activa' && fechaFin >= hoy
+      }
+    ) || []
+
+    if (planesActivosActuales.length > 0) {
+      const confirmacion = confirm(
+        `⚠️ Este cliente ya tiene ${planesActivosActuales.length} membresía(s) activa(s).\n\n¿Quieres continuar agregando otra membresía? Esto puede crear confusión.\n\nSe recomienda eliminar o modificar las membresías existentes primero.`
+      )
+      if (!confirmacion) return
     }
 
     setAssigningPlan(true)
@@ -219,9 +308,10 @@ export default function ConsultasPage() {
         .insert({
           cliente_id: clienteInfo.id,
           plan_id: planId,
-          fecha_inicio: fechaInicio.toISOString(),
-          fecha_fin: fechaVencimiento.toISOString(),
-          estado: 'activa'
+          fecha_inicio: fechaInicio.toISOString().split('T')[0],
+          fecha_fin: fechaVencimiento.toISOString().split('T')[0],
+          estado: 'activa',
+          monto_pagado: plan.precio
         })
 
       if (inscripcionError) throw inscripcionError
@@ -247,7 +337,12 @@ export default function ConsultasPage() {
     }
 
     const planActivo = clienteInfo.inscripciones?.find(
-      i => i.estado === 'activa'
+      i => {
+        const fechaFin = new Date(i.fecha_fin + 'T23:59:59')
+        const hoy = new Date()
+        hoy.setHours(0, 0, 0, 0)
+        return i.estado === 'activa' && fechaFin >= hoy
+      }
     )
 
     if (!planActivo) {
@@ -310,6 +405,29 @@ export default function ConsultasPage() {
     }
   }
 
+  const eliminarInscripcion = async (inscripcionId: string) => {
+    if (!clienteInfo) return
+    
+    const confirmacion = confirm('¿Estás seguro de que quieres eliminar esta membresía? Esta acción no se puede deshacer.')
+    if (!confirmacion) return
+    
+    try {
+      const { error } = await supabase
+        .from('inscripciones')
+        .delete()
+        .eq('id', inscripcionId)
+        
+      if (error) throw error
+      
+      alert('✅ Membresía eliminada correctamente')
+      // Recargar información del cliente
+      buscarCliente()
+    } catch (error: any) {
+      console.error('Error eliminando inscripción:', error)
+      alert('Error al eliminar la membresía: ' + error.message)
+    }
+  }
+
   const registrarAsistencia = async () => {
     if (!clienteInfo) return
 
@@ -340,9 +458,20 @@ export default function ConsultasPage() {
     }
   }
 
-  const planActivo = clienteInfo?.inscripciones?.find(
-    i => i.estado === 'activa'
-  )
+  const planesActivos = clienteInfo?.inscripciones?.filter(
+    i => {
+      const fechaFin = new Date(i.fecha_fin + 'T23:59:59') // Asegurar que sea fin del día
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0) // Inicio del día actual
+      console.log('Verificando inscripción:', i.estado, i.fecha_fin, fechaFin, hoy, fechaFin >= hoy)
+      return i.estado === 'activa' && fechaFin >= hoy
+    }
+  ) || []
+  
+  const planActivo = planesActivos[0] // Para compatibilidad con código existente
+  
+  // Determinar si el cliente realmente está activo (basado en planes, no en el campo DB)
+  const clienteRealmenteActivo = !!planActivo
 
   return (
     <div className="space-y-6">
@@ -391,7 +520,7 @@ export default function ConsultasPage() {
                 {clienteInfo.nombre} {clienteInfo.apellido}
               </h2>
               <div className="flex items-center space-x-2">
-                {clienteInfo.activo && planActivo ? (
+                {clienteRealmenteActivo ? (
                   <span className="flex items-center text-green-600 text-lg font-bold">
                     <CheckCircle className="h-6 w-6 mr-1" />
                     Activo
@@ -430,35 +559,61 @@ export default function ConsultasPage() {
                 Estado de Membresía
               </h3>
               
-              {planActivo ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-green-800">{(Array.isArray(planActivo.planes) ? planActivo.planes[0]?.nombre : planActivo.planes?.nombre) || 'Plan sin nombre'}</p>
-                      <p className="text-green-600 text-sm">
-                        Vence: {new Date(planActivo.fecha_fin).toLocaleDateString('es-AR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
+              {planesActivos.length > 0 ? (
+                <div className="space-y-3">
+                  {planesActivos.map((plan, index) => (
+                    <div key={plan.id} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-green-800">
+                            {(Array.isArray(plan.planes) ? plan.planes[0]?.nombre : plan.planes?.nombre) || 'Plan sin nombre'}
+                          </p>
+                          <p className="text-green-600 text-sm">
+                            Inicio: {new Date(plan.fecha_inicio).toLocaleDateString('es-AR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })} - Vence: {new Date(plan.fecha_fin).toLocaleDateString('es-AR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            ACTIVA
+                          </span>
+                          <button
+                            onClick={() => {
+                              setNuevaFechaInicio(plan.fecha_inicio.split('T')[0])
+                              setShowModifyModal(true)
+                            }}
+                            className="bg-orange-600 text-white px-2 py-1 rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center space-x-1"
+                          >
+                            <Edit className="h-3 w-3" />
+                            <span>Modificar</span>
+                          </button>
+                          {planesActivos.length > 1 && (
+                            <button
+                              onClick={() => eliminarInscripcion(plan.id)}
+                              className="bg-red-600 text-white px-2 py-1 rounded-lg text-xs font-medium hover:bg-red-700 flex items-center space-x-1"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              <span>Eliminar</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {planesActivos.length > 1 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-yellow-700 text-sm">
+                        ⚠️ Este cliente tiene múltiples membresías activas. Considera eliminar las que no correspondan.
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        ACTIVA
-                      </span>
-                      <button
-                        onClick={() => {
-                          setNuevaFechaInicio(planActivo.fecha_inicio.split('T')[0])
-                          setShowModifyModal(true)
-                        }}
-                        className="bg-orange-600 text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center space-x-1"
-                      >
-                        <Edit className="h-3 w-3" />
-                        <span>Modificar Fecha</span>
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -474,7 +629,7 @@ export default function ConsultasPage() {
                       <button
                         onClick={() => {
                           cargarPlanes()
-                          setFechaInicioPlan(formatDateForInput(getBuenosAiresDate()))
+                          setFechaInicioPlan(getBuenosAiresDateString())
                           setShowPlanModal(true)
                         }}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center space-x-1"
@@ -494,7 +649,7 @@ export default function ConsultasPage() {
                 <Calendar className="h-5 w-5 mr-2" />
                 Asistencias
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Última visita</p>
                   <p className="text-lg font-semibold text-gray-900">
@@ -508,8 +663,14 @@ export default function ConsultasPage() {
                     }
                   </p>
                 </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm font-medium text-blue-600">
+                    {planActivo ? 'Visitas en membresía actual' : 'Visitas en membresía anterior'}
+                  </p>
+                  <p className="text-xl font-bold text-blue-900">{clienteInfo.asistencias_periodo_actual}</p>
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total de visitas</p>
+                  <p className="text-sm font-medium text-gray-600">Total visitas (historial)</p>
                   <p className="text-lg font-semibold text-gray-900">{clienteInfo.total_asistencias}</p>
                 </div>
               </div>
@@ -565,24 +726,15 @@ export default function ConsultasPage() {
                 <label htmlFor="fechaInicioPlan" className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha de inicio del plan:
                 </label>
-                <input
-                  type="date"
+                <DateInputArgentine
                   id="fechaInicioPlan"
                   value={fechaInicioPlan}
-                  onChange={(e) => setFechaInicioPlan(e.target.value)}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  onChange={setFechaInicioPlan}
+                  className="focus:ring-blue-500 focus:border-blue-500"
                 />
                 {fechaInicioPlan && (
                   <div className="text-sm text-blue-600 font-medium mt-2">
-                    📅 Fecha seleccionada: {(() => {
-                      const [year, month, day] = fechaInicioPlan.split('-').map(Number)
-                      const fecha = new Date(year, month - 1, day)
-                      return fecha.toLocaleDateString('es-AR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      })
-                    })()}
+                    📅 Fecha seleccionada: {formatInputDate(fechaInicioPlan)}
                   </div>
                 )}
                 <p className="text-sm text-gray-500 mt-1">
@@ -612,11 +764,7 @@ export default function ConsultasPage() {
                                 const inicio = new Date(year, month - 1, day) // month - 1 porque Date usa índice 0
                                 const vencimiento = new Date(inicio)
                                 vencimiento.setDate(inicio.getDate() + plan.duracion_dias)
-                                return vencimiento.toLocaleDateString('es-AR', {
-                                  day: '2-digit',
-                                  month: '2-digit', 
-                                  year: 'numeric'
-                                })
+                                return formatDateSafe(vencimiento)
                               })()}
                             </p>
                           )}
@@ -665,24 +813,15 @@ export default function ConsultasPage() {
                 <label htmlFor="nuevaFechaInicio" className="block text-sm font-medium text-gray-700 mb-2">
                   Nueva fecha de inicio del plan:
                 </label>
-                <input
-                  type="date"
+                <DateInputArgentine
                   id="nuevaFechaInicio"
                   value={nuevaFechaInicio}
-                  onChange={(e) => setNuevaFechaInicio(e.target.value)}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  onChange={setNuevaFechaInicio}
+                  className="focus:ring-orange-500 focus:border-orange-500"
                 />
                 {nuevaFechaInicio && (
                   <div className="text-sm text-orange-600 font-medium mt-2">
-                    📅 Nueva fecha: {(() => {
-                      const [year, month, day] = nuevaFechaInicio.split('-').map(Number)
-                      const fecha = new Date(year, month - 1, day)
-                      return fecha.toLocaleDateString('es-AR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      })
-                    })()}
+                    📅 Nueva fecha: {formatInputDate(nuevaFechaInicio)}
                   </div>
                 )}
                 <p className="text-sm text-gray-500 mt-1">

@@ -88,7 +88,8 @@ export default function ClientesPage() {
     cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.telefono?.includes(searchTerm)
+    cliente.telefono?.includes(searchTerm) ||
+    `${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   if (loading) {

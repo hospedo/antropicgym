@@ -54,7 +54,7 @@ export async function actualizarEstadosClientes(gimnasioId: string) {
           .eq('id', inscripcion.id)
       }
 
-      // Determinar el nuevo estado del cliente
+      // Determinar el nuevo estado del cliente basado en inscripciones vigentes
       const nuevoEstado = !!inscripcionActiva
       
       // Si el estado cambió, actualizarlo
